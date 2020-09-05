@@ -1,0 +1,15 @@
+{
+  "name": "clue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "proto.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.20",
+    "mocha": "^8.1.3"
+  }
+}
