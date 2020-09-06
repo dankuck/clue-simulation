@@ -1,4 +1,4 @@
-const { shuffle } = require('lodash');
+const { shuffle, sample } = require('lodash');
 
 class Card
 {
@@ -151,11 +151,23 @@ function accuse(...params)
     return new Suggestion(Suggestion.ACCUSATION, ...params);
 }
 
+class SuggestionError extends Error
+{
+    constructor(suggestion, ...params)
+    {
+        super(...params);
+        this.suggestion = suggestion;
+    }
+}
+
+const DEFAULT_CONFIG = {validate: true};
+
 class ClueGame
 {
-    constructor(deck, strategies)
+    constructor(deck, strategies, config = DEFAULT_CONFIG)
     {
         this.deck = deck;
+        this.config = config;
 
         const {envelope, hands} = this.deck.divy(strategies.length);
 
@@ -167,6 +179,7 @@ class ClueGame
         this.steps = 0;
         this.winner = null;
         this.losers = [];
+        this.errors = [];
     }
 
     play(ttl = Infinity)
@@ -211,13 +224,55 @@ class ClueGame
         }
         this.steps++;
         const player = this.turnPlayer();
-        const suggestion = player.move();
-        if (suggestion.type === 'SUGGESTION') {
+        let suggestion;
+        try {
+            suggestion = player.move();
+            this.validateSuggestion(suggestion);
+        } catch (e) {
+            this.losePlayer(player);
+            this.addPlayerError(player, e);
+            this.advanceTurn();
+            return;
+        }
+        if (suggestion.type === Suggestion.SUGGESTION) {
             this.handleSuggestion(suggestion, player);
-        } else {
+        } else if (suggestion.type === Suggestion.ACCUSATION) {
             this.handleAccusation(suggestion, player);
         }
         this.advanceTurn();
+    }
+
+    validateSuggestion(suggestion)
+    {
+        if (! this.config.validate) {
+            return;
+        }
+        if (! (suggestion instanceof Suggestion)) {
+            throw new SuggestionError(suggestion, 'Not a Suggestion object');
+        }
+        if (! (suggestion.suspect instanceof Card)) {
+            throw new SuggestionError(suggestion, 'Missing or wrong data in suspect field');
+        }
+        if (! (suggestion.weapon instanceof Card)) {
+            throw new SuggestionError(suggestion, 'Missing or wrong data in weapon field');
+        }
+        if (! (suggestion.room instanceof Card)) {
+            throw new SuggestionError(suggestion, 'Missing or wrong data in room field');
+        }
+        if (suggestion.suspect.type !== Card.SUSPECT) {
+            throw new SuggestionError(suggestion, `Suspect card is wrong type: ${suggestion.suspect.type}`);
+        }
+        if (suggestion.weapon.type !== Card.WEAPON) {
+            throw new SuggestionError(suggestion, `Weapon card is wrong type: ${suggestion.weapon.type}`);
+        }
+        if (suggestion.room.type !== Card.ROOM) {
+            throw new SuggestionError(suggestion, `Room card is wrong type: ${suggestion.room.type}`);
+        }
+    }
+
+    addPlayerError(player, error)
+    {
+        this.errors.push({player, error});
     }
 
     advanceTurn()
@@ -250,11 +305,6 @@ class ClueGame
         }
     }
 
-    isGameOver()
-    {
-        return this.winner || this.losers.length === this.players.length;
-    }
-
     handleAccusation(accusation, player)
     {
         const {
@@ -265,8 +315,18 @@ class ClueGame
         if (this.envelope.has(suspect) && this.envelope.has(weapon) && this.envelope.has(room)) {
             this.winner = player;
         } else {
-            this.losers.push(player);
+            this.losePlayer(player);
         }
+    }
+
+    losePlayer(player)
+    {
+        this.losers.push(player);
+    }
+
+    isGameOver()
+    {
+        return this.winner || this.losers.length === this.players.length;
     }
 
     chooseCardToShow(player, cards, asker)
@@ -274,7 +334,7 @@ class ClueGame
         const askerId = this.playerId(asker);
         const show = player.chooseCardToShow && player.chooseCardToShow(cards, askerId);
         if (! cards.includes(show)) {
-            return cards[0];
+            return sample(cards);
         } else {
             return show;
         }

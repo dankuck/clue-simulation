@@ -9,7 +9,6 @@ const {
     accuse,
 } = require('./Clue.js');
 const ExampleStrategy = require('./ExampleStrategy.js');
-const TestTheTestStrategy = require('./TestTheTestStrategy.js');
 const testStrategy = require('./testStrategy.js');
 const assert = require('assert');
 const {
@@ -31,7 +30,7 @@ describe('Clue', function () {
             equal(0, deck.cards.length);
         });
 
-        it('should instantiate with 1-card', function () {
+        it('should instantiate with 1 card', function () {
             const card = new Card(Card.SUSPECT, 'Gary');
             const deck = new Deck([card]);
             equal(1, deck.cards.length);
@@ -250,7 +249,11 @@ describe('Clue', function () {
             }
             let peekCard;
             let sawCard, sawPlayer;
-            const game = new ClueGame(Deck.buildStandardDeck(), [PlayerA, PlayerB]);
+            const game = new ClueGame(
+                Deck.buildStandardDeck(),
+                [PlayerA, PlayerB],
+                {validate: false}
+            );
             game.step();
             notEqual(null, sawCard);
             equal(peekCard, sawCard);
@@ -290,14 +293,18 @@ describe('Clue', function () {
             }
             let peekCard;
             let saw;
-            const game = new ClueGame(Deck.buildStandardDeck(), [PlayerA, PlayerB, PlayerC]);
+            const game = new ClueGame(
+                Deck.buildStandardDeck(),
+                [PlayerA, PlayerB, PlayerC],
+                {validate: false}
+            );
             game.step();
             equal(suggest(peekCard, peekCard, peekCard), saw.suggestion);
             equal(0, saw.asker);
             equal(1, saw.player);
         });
 
-        it('should inform other players when a player cannot deny a suggestion', function () {
+        it('should inform other players when a player cannot refute a suggestion', function () {
             class PlayerA
             {
                 move()
@@ -322,7 +329,11 @@ describe('Clue', function () {
                 }
             }
             let saw;
-            const game = new ClueGame(Deck.buildStandardDeck(), [PlayerA, PlayerB, PlayerC]);
+            const game = new ClueGame(
+                Deck.buildStandardDeck(),
+                [PlayerA, PlayerB, PlayerC],
+                {validate: false}
+            );
             game.step();
             equal(suggest(null, null, null), saw.suggestion);
             equal(0, saw.asker);
@@ -386,11 +397,110 @@ describe('Clue', function () {
             let peekCards;
             let sawCard;
             let sawPlayerId;
-            const game = new ClueGame(Deck.buildStandardDeck(), [PlayerA, PlayerB]);
+            const game = new ClueGame(
+                Deck.buildStandardDeck(),
+                [PlayerA, PlayerB],
+                {validate: false}
+            );
             game.step();
             equal(2, peekCards.length);
             equal(peekCards[1], sawCard);
             equal(0, sawPlayerId);
+        });
+
+        it('should recover from errors thrown from move()', function () {
+            class BadSuggestionPlayer {
+                move() {
+                    throw new Error('Should recover from error in move()');
+                }
+            }
+            const game = new ClueGame(Deck.buildStandardDeck(), [BadSuggestionPlayer]);
+            game.step();
+            assert(game.isGameOver());
+        });
+
+        it('should deal with a strategy that does not return Suggestion class', function () {
+            class BadSuggestionPlayer {
+                constructor(hand) {
+                    this.hand = hand;
+                }
+
+                move() {
+                    const suggestion = suggest(
+                        this.hand.get(0),
+                        this.hand.get(1),
+                        this.hand.get(2)
+                    );
+                    // make a non-Suggestion copy
+                    return {...suggestion};
+                }
+            }
+            const game = new ClueGame(Deck.buildStandardDeck(), [BadSuggestionPlayer]);
+            game.step();
+            assert(game.isGameOver());
+            equal(1, game.errors.length);
+        });
+
+        it('should deal with a Suggestion with missing cards', function () {
+            class BadSuggestionPlayer {
+                constructor(hand) {
+                    this.hand = hand;
+                }
+
+                move() {
+                    return suggest(
+                        this.hand.get(0),
+                        this.hand.get(1),
+                        null
+                    );
+                }
+            }
+            const game = new ClueGame(Deck.buildStandardDeck(), [BadSuggestionPlayer]);
+            game.step();
+            assert(game.isGameOver());
+            equal(1, game.errors.length);
+        });
+
+        it('should deal with a Suggestion with wrongly typed cards', function () {
+            class BadSuggestionPlayer {
+                constructor(hand) {
+                    this.hand = hand;
+                }
+
+                move() {
+                    return suggest(
+                        this.hand.get(0), // The first card
+                        this.hand.get(0), // must be wrong
+                        this.hand.get(0)  // for two of them
+                    );
+                }
+            }
+            const game = new ClueGame(Deck.buildStandardDeck(), [BadSuggestionPlayer]);
+            game.step();
+            assert(game.isGameOver());
+            equal(1, game.errors.length);
+        });
+
+        it('should deal with a Suggestion with invalid type', function () {
+            class BadSuggestionPlayer {
+                constructor(hand) {
+                    this.hand = hand;
+                }
+
+                move() {
+                    const suggestion = suggest(
+                        this.deck.getSuspects()[0],
+                        this.deck.getWeapons()[0],
+                        this.deck.getRooms()[0]
+                    );
+                    suggestion.type = 'BAD TYPE';
+                    return suggestion;
+                }
+            }
+            const game = new ClueGame(Deck.buildStandardDeck(), [BadSuggestionPlayer]);
+            game.step();
+            assert(game.isGameOver());
+            equal(1, game.errors.length);
         });
     });
 
@@ -398,48 +508,6 @@ describe('Clue', function () {
 
         testStrategy(ExampleStrategy);
 
-    });
-
-    describe('TestTheTestStrategy', function () {
-
-        // First, let's check that it works fine as a strategy.
-        testStrategy(TestTheTestStrategy);
-
-        describe('fails reliably', function () {
-            // The TestTheTestStrategy was designed to fail catastrophically if the
-            // tests or game pass bad data to it. The following tests ensure it
-            // fails. Other strategies do not need to ensure this failure, so these
-            // tests aren't part of the testStrategy.js suite of tests.
-
-            /**
-             * Here's a little function turn `it` on its head. Expects an
-             * exception to be thrown and fails if it isn't.
-             */
-            function itFails(description, cb) {
-                it(`fails ${description}`, function () {
-                    let error = null;
-                    try {
-                        cb();
-                    } catch (e) {
-                        error = e;
-                    }
-                    assert(error, 'Exception expected but none was thrown');
-                });
-            }
-
-            itFails('when newing up with no hand', function () {
-                const deck = Deck.buildStandardDeck();
-                new TestTheTestStrategy(null, deck);
-                // whammy!
-            });
-
-            itFails('when newing up with no hand', function () {
-                const deck = Deck.buildStandardDeck();
-                const {hands} = deck.divy(1);
-                new TestTheTestStrategy(hands[0], null);
-                // whammy!
-            });
-        });
     });
 });
 

@@ -57,9 +57,15 @@ class ExampleStrategy
      */
     seeCard({suggestion, card, player})
     {
-        // We use this opportunity to test that the test and game pass us good
-        // parameters. For other strategies, it may not be necessary to test
-        // that, because we are testing it here.
+    }
+
+    /**
+     * The game uses chooseCardToShow to give you a chance to show a preferred
+     * card to the player with the given ID. You may also choose to record the
+     * fact that that player saw that card.
+     */
+    chooseCardToShow(card, player)
+    {
     }
 
     /**
@@ -74,9 +80,6 @@ class ExampleStrategy
      */
     seeSuggestionAnswered({suggestion, player, asker})
     {
-        // We use this opportunity to test that the test and game pass us good
-        // parameters. For other strategies, it may not be necessary to test
-        // that, because we are testing it here.
     }
 
     /**
@@ -90,9 +93,6 @@ class ExampleStrategy
      */
     seeSuggestionSkipped({suggestion, player, asker})
     {
-        // We use this opportunity to test that the test and game pass us good
-        // parameters. For other strategies, it may not be necessary to test
-        // that, because we are testing it here.
     }
 }
 

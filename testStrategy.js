@@ -104,6 +104,22 @@ function testStrategy(Strategy)
             // no whammy
         });
 
+        it('can have a chooseCardToShow method', function () {
+            const deck = buildDeck(1);
+            const {hands} = deck.divy(1);
+            const strategy = new Strategy(hands[0], deck);
+            if (! strategy.chooseCardToShow) {
+                // If chooseCardToShow is not defined or returns anything other
+                // than a card it was given, then a random card is chosen to
+                // show to the other player.
+                this.skip();
+            }
+            const card = hands[0].get(0);
+            const player = Math.floor(Math.random() * 6);
+            strategy.chooseCardToShow(card, player);
+            // no whammy
+        });
+
         it('can have a seeSuggestionAnswered method', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
@@ -168,7 +184,6 @@ function testStrategy(Strategy)
             const asker = (player + Math.floor(Math.random() * 5)) % 6;
             strategy.seeSuggestionSkipped({suggestion, player, asker});
             // no whammy
-
         });
     });
 }
