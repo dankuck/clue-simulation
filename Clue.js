@@ -49,6 +49,11 @@ class CardSet
     {
         return this.filterType(Card.ROOM);
     }
+
+    forEach(cb)
+    {
+        this.cards.forEach(cb);
+    }
 }
 
 class Hand extends CardSet

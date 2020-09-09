@@ -7,7 +7,7 @@ const {
     Suggestion,
     suggest,
     accuse,
-} = require('./Clue.js');
+} = require('../Clue.js');
 const assert = require('assert');
 const {
     deepStrictEqual:    equal,

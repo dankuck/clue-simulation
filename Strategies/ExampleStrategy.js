@@ -1,4 +1,4 @@
-const { suggest, accuse, Card } = require('./Clue.js');
+const { suggest, accuse, Card } = require('../Clue.js');
 
 /**
  * Your strategy must be a class or a function that can be constructed.
