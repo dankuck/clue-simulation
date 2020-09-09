@@ -32,7 +32,7 @@ class CardSet
 
     filterType(type)
     {
-        return this.cards.filter(card => card.type === type);
+        return this.filter(card => card.type === type);
     }
 
     getSuspects()
@@ -49,12 +49,12 @@ class CardSet
     {
         return this.filterType(Card.ROOM);
     }
-
-    forEach(cb)
-    {
-        this.cards.forEach(cb);
-    }
 }
+// Here are some array methods that we can just pass through to our internal
+// array to make this class more useful
+['forEach', 'filter', 'map', 'slice'].forEach(funcName => {
+    CardSet.prototype[funcName] = function (...params) { return this.cards[funcName](...params) };
+});
 
 class Hand extends CardSet
 {
@@ -146,6 +146,14 @@ class Suggestion
 Suggestion.SUGGESTION = 'SUGGESTION';
 Suggestion.ACCUSATION = 'ACCUSATION';
 
+class SuggestionResult
+{
+    constructor(data)
+    {
+        Object.assign(this, data);
+    }
+}
+
 function suggest(...params)
 {
     return new Suggestion(Suggestion.SUGGESTION, ...params);
@@ -154,6 +162,46 @@ function suggest(...params)
 function accuse(...params)
 {
     return new Suggestion(Suggestion.ACCUSATION, ...params);
+}
+
+function win(asker, suggestion)
+{
+    return new SuggestionResult({
+        result: 'WIN',
+        asker,
+        suggestion,
+    });
+}
+
+function eliminate(asker, suggestion)
+{
+    return new SuggestionResult({
+        result: 'ELIMINATED',
+        asker,
+        suggestion,
+    });
+}
+
+function sugception(error, asker, suggestion)
+{
+    return new SuggestionResult({
+        result: 'ERROR',
+        error,
+        asker,
+        suggestion,
+    });
+}
+
+function refute(asker, suggestion, refuter, card, skips)
+{
+    return new SuggestionResult({
+        result: 'REFUTED',
+        asker,
+        suggestion,
+        refuter,
+        card,
+        skips,
+    });
 }
 
 class SuggestionError extends Error
@@ -178,13 +226,14 @@ class ClueGame
 
         this.envelope = envelope;
         this.hands = [...hands];
-        this.players = strategies.map(strategy => new strategy(hands.shift()));
+        this.players = strategies.map(strategy => new strategy(hands.shift(), this.deck));
 
         this.turn = 0;
         this.steps = 0;
         this.winner = null;
         this.losers = [];
         this.errors = [];
+        this.suggestions = [];
     }
 
     play(ttl = Infinity)
@@ -235,14 +284,20 @@ class ClueGame
             this.validateSuggestion(suggestion);
         } catch (e) {
             this.losePlayer(player);
-            this.addPlayerError(player, e);
+            this.suggestions.push(
+                this.addPlayerError(player, e, suggestion)
+            );
             this.advanceTurn();
             return;
         }
         if (suggestion.type === Suggestion.SUGGESTION) {
-            this.handleSuggestion(suggestion, player);
+            this.suggestions.push(
+                this.handleSuggestion(suggestion, player)
+            );
         } else if (suggestion.type === Suggestion.ACCUSATION) {
-            this.handleAccusation(suggestion, player);
+            this.suggestions.push(
+                this.handleAccusation(suggestion, player)
+            );
         }
         this.advanceTurn();
     }
@@ -275,9 +330,11 @@ class ClueGame
         }
     }
 
-    addPlayerError(player, error)
+    addPlayerError(player, error, suggestion)
     {
-        this.errors.push({player, error});
+        const result = sugception(error, player, suggestion);
+        this.errors.push(result);
+        return result;
     }
 
     advanceTurn()
@@ -298,13 +355,16 @@ class ClueGame
             room,
         } = suggestion;
         const pairs = this.otherPlayersAndHands();
+        let skips = 0;
         for (let i = 0; i < pairs.length; i++) {
             const {hand, player} = pairs[i];
             const cards = [suspect, weapon, room].filter(card => hand.has(card));
             if (cards.length > 0) {
                 const card = this.chooseCardToShow(player, cards, asker);
-                this.showCard(card, player, asker, suggestion);
+                this.showCard(card, player, asker, suggestion, skips);
+                return refute(asker, suggestion, player, card, skips);
             } else {
+                skips++;
                 this.showNoCards(player, asker, suggestion);
             }
         }
@@ -319,8 +379,10 @@ class ClueGame
         } = accusation;
         if (this.envelope.has(suspect) && this.envelope.has(weapon) && this.envelope.has(room)) {
             this.winner = player;
+            return win(player, accusation);
         } else {
             this.losePlayer(player);
+            return eliminate(player, accusation);
         }
     }
 
