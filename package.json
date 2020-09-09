@@ -4,7 +4,8 @@
   "description": "",
   "main": "proto.js",
   "scripts": {
-    "test": "mocha --glob '*.spec.js'"
+    "test": "mocha --glob '*.spec.js'",
+    "tournament": "node ./run.js"
   },
   "author": "",
   "license": "ISC",

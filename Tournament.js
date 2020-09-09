@@ -4,8 +4,28 @@ class Tournament
 {
     constructor(config = {})
     {
-        const Iterator = config.iterator || PermutationIterator;
-        this.iterator = new Iterator(config.strategies, 3, 6);
+        this.config = config;
+        this.iterator = this.buildIterator();
+    }
+
+    buildIterator()
+    {
+        const Iterator = this.config.iterator || PermutationIterator;
+        return new Iterator(this.config.strategies, this.config.min || 3, this.config.max || 6);
+    }
+
+    play(rounds = 1, cb = null)
+    {
+        const results = [];
+        for (let i = 0; i < rounds; i++) {
+            let result;
+            while (result = this.step()) {
+                results.push(result);
+                cb && cb(result);
+            }
+            this.iterator = this.buildIterator();
+        }
+        return results;
     }
 
     step()
@@ -16,7 +36,8 @@ class Tournament
         }
         const game = new ClueGame(Deck.buildStandardDeck(), strategies);
         const winner = game.play();
-        return {winner, game, strategies};
+        const winningStrategy = winner && strategies.filter(strategy => winner.constructor === strategy)[0];
+        return {winner, game, strategies, winningStrategy};
     }
 }
 

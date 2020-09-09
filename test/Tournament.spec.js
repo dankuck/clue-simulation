@@ -61,6 +61,202 @@ describe('Tournament', function () {
             equal(1, results[0].strategies.length);
             equal(null, results[1]);
         });
+
+        it('should run 2 games with the standard iterator and different min/max', function () {
+            // with just one strategy S, it should play
+            // [S]
+            // [S, S]
+            const tournament = new Tournament({
+                strategies: [ExampleStrategy],
+                min: 1,
+                max: 2,
+            });
+            const results = [
+                tournament.step(),
+                tournament.step(),
+            ];
+            equal(1, results[0].strategies.length);
+            equal(2, results[1].strategies.length);
+        });
+
+        it('should run 120 games with the standard iterator and two strategies', function () {
+            // with two strategies S and T, it should play
+            // [S, S, S]
+            // [S, S, T]
+            // [S, T, S]
+            // [S, T, T]
+            // [T, S, S]
+            // [T, S, T]
+            // [T, T, S]
+            // [T, T, T]
+            // [S, S, S, S]
+            // [S, S, S, T]
+            // [S, S, T, S]
+            // [S, S, T, T]
+            // [S, T, S, S]
+            // [S, T, S, T]
+            // [S, T, T, S]
+            // [S, T, T, T]
+            // [T, S, S, S]
+            // [T, S, S, T]
+            // [T, S, T, S]
+            // [T, S, T, T]
+            // [T, T, S, S]
+            // [T, T, S, T]
+            // [T, T, T, S]
+            // [T, T, T, T]
+            // [S, S, S, S, S]
+            // [S, S, S, S, T]
+            // [S, S, S, T, S]
+            // [S, S, S, T, T]
+            // [S, S, T, S, S]
+            // [S, S, T, S, T]
+            // [S, S, T, T, S]
+            // [S, S, T, T, T]
+            // [S, T, S, S, S]
+            // [S, T, S, S, T]
+            // [S, T, S, T, S]
+            // [S, T, S, T, T]
+            // [S, T, T, S, S]
+            // [S, T, T, S, T]
+            // [S, T, T, T, S]
+            // [S, T, T, T, T]
+            // [T, S, S, S, S]
+            // [T, S, S, S, T]
+            // [T, S, S, T, S]
+            // [T, S, S, T, T]
+            // [T, S, T, S, S]
+            // [T, S, T, S, T]
+            // [T, S, T, T, S]
+            // [T, S, T, T, T]
+            // [T, T, S, S, S]
+            // [T, T, S, S, T]
+            // [T, T, S, T, S]
+            // [T, T, S, T, T]
+            // [T, T, T, S, S]
+            // [T, T, T, S, T]
+            // [T, T, T, T, S]
+            // [T, T, T, T, T]
+            // [S, S, S, S, S, S]
+            // [S, S, S, S, S, T]
+            // [S, S, S, S, T, S]
+            // [S, S, S, S, T, T]
+            // [S, S, S, T, S, S]
+            // [S, S, S, T, S, T]
+            // [S, S, S, T, T, S]
+            // [S, S, S, T, T, T]
+            // [S, S, T, S, S, S]
+            // [S, S, T, S, S, T]
+            // [S, S, T, S, T, S]
+            // [S, S, T, S, T, T]
+            // [S, S, T, T, S, S]
+            // [S, S, T, T, S, T]
+            // [S, S, T, T, T, S]
+            // [S, S, T, T, T, T]
+            // [S, T, S, S, S, S]
+            // [S, T, S, S, S, T]
+            // [S, T, S, S, T, S]
+            // [S, T, S, S, T, T]
+            // [S, T, S, T, S, S]
+            // [S, T, S, T, S, T]
+            // [S, T, S, T, T, S]
+            // [S, T, S, T, T, T]
+            // [S, T, T, S, S, S]
+            // [S, T, T, S, S, T]
+            // [S, T, T, S, T, S]
+            // [S, T, T, S, T, T]
+            // [S, T, T, T, S, S]
+            // [S, T, T, T, S, T]
+            // [S, T, T, T, T, S]
+            // [S, T, T, T, T, T]
+            // [T, S, S, S, S, S]
+            // [T, S, S, S, S, T]
+            // [T, S, S, S, T, S]
+            // [T, S, S, S, T, T]
+            // [T, S, S, T, S, S]
+            // [T, S, S, T, S, T]
+            // [T, S, S, T, T, S]
+            // [T, S, S, T, T, T]
+            // [T, S, T, S, S, S]
+            // [T, S, T, S, S, T]
+            // [T, S, T, S, T, S]
+            // [T, S, T, S, T, T]
+            // [T, S, T, T, S, S]
+            // [T, S, T, T, S, T]
+            // [T, S, T, T, T, S]
+            // [T, S, T, T, T, T]
+            // [T, T, S, S, S, S]
+            // [T, T, S, S, S, T]
+            // [T, T, S, S, T, S]
+            // [T, T, S, S, T, T]
+            // [T, T, S, T, S, S]
+            // [T, T, S, T, S, T]
+            // [T, T, S, T, T, S]
+            // [T, T, S, T, T, T]
+            // [T, T, T, S, S, S]
+            // [T, T, T, S, S, T]
+            // [T, T, T, S, T, S]
+            // [T, T, T, S, T, T]
+            // [T, T, T, T, S, S]
+            // [T, T, T, T, S, T]
+            // [T, T, T, T, T, S]
+            // [T, T, T, T, T, T]
+            class ExampleStrategyCopy extends ExampleStrategy
+            {
+            }
+            const tournament = new Tournament({
+                strategies: [ExampleStrategy, ExampleStrategyCopy],
+            });
+            const results = [];
+            for (let i = 0; i < 120; i++) {
+                results.push(
+                    tournament.step()
+                );
+            }
+            equal(3, results[0].strategies.length);
+            equal(6, results[119].strategies.length);
+        });
+
+        it('should play a round with the standard iterator', function () {
+            const tournament = new Tournament({
+                strategies: [ExampleStrategy],
+            });
+            const results = tournament.play();
+            equal(3, results[0].strategies.length);
+            equal(6, results[3].strategies.length);
+            equal(4, results.length);
+        });
+
+        it('should play 2 rounds with the standard iterator', function () {
+            const tournament = new Tournament({
+                strategies: [ExampleStrategy],
+            });
+            const results = tournament.play(2);
+
+            equal(3, results[0].strategies.length);
+            equal(6, results[3].strategies.length);
+
+            equal(3, results[4].strategies.length);
+            equal(6, results[7].strategies.length);
+
+            equal(8, results.length);
+        });
+
+        it('should play 2 rounds with a callback', function () {
+            const tournament = new Tournament({
+                strategies: [ExampleStrategy],
+            });
+            const results = [];
+            tournament.play(2, result => results.push(result));
+
+            equal(3, results[0].strategies.length);
+            equal(6, results[3].strategies.length);
+
+            equal(3, results[4].strategies.length);
+            equal(6, results[7].strategies.length);
+
+            equal(8, results.length);
+        });
     });
 
     describe('PermutationIterator', function () {
