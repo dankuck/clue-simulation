@@ -7,6 +7,7 @@ const {
     Suggestion,
     suggest,
     accuse,
+    GameSummary,
 } = require('../Clue.js');
 const assert = require('assert');
 const {
@@ -64,16 +65,18 @@ function testStrategy(Strategy)
 {
     forEachDeck(function (buildDeck) {
 
-        it('should instantiate with a Hand and Deck (required)', function () {
+        it('should instantiate with a Hand, Deck, and game info (required)', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
-            new Strategy(hands[0], deck);
+            const game_summary = new GameSummary(0, hands);
+            new Strategy(hands[0], deck, game_summary);
         });
 
         it('should make a move (required)', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
-            const strategy = new Strategy(hands[0], deck);
+            const game_summary = new GameSummary(0, hands);
+            const strategy = new Strategy(hands[0], deck, game_summary);
             const suggestion = strategy.move();
             assert(suggestion.type);
             assert(suggestion.suspect);
@@ -87,7 +90,8 @@ function testStrategy(Strategy)
         it('can have a seeCard method', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
-            const strategy = new Strategy(hands[0], deck);
+            const game_summary = new GameSummary(0, hands);
+            const strategy = new Strategy(hands[0], deck, game_summary);
             if (! strategy.seeCard) {
                 // seeCard is not present and not required. It's kind of
                 // strange that this strategy does not want to know the
@@ -107,7 +111,8 @@ function testStrategy(Strategy)
         it('can have a chooseCardToShow method', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
-            const strategy = new Strategy(hands[0], deck);
+            const game_summary = new GameSummary(0, hands);
+            const strategy = new Strategy(hands[0], deck, game_summary);
             if (! strategy.chooseCardToShow) {
                 // If chooseCardToShow is not defined or returns anything other
                 // than a card it was given, then a random card is chosen to
@@ -123,7 +128,8 @@ function testStrategy(Strategy)
         it('can have a seeSuggestionAnswered method', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
-            const strategy = new Strategy(hands[0], deck);
+            const game_summary = new GameSummary(0, hands);
+            const strategy = new Strategy(hands[0], deck, game_summary);
             if (! strategy.seeSuggestionAnswered) {
                 // Some strategies do not care if other players' suggestions
                 // get answered.
@@ -156,7 +162,8 @@ function testStrategy(Strategy)
         it('can have a seeSuggestionSkipped method', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
-            const strategy = new Strategy(hands[0], deck);
+            const game_summary = new GameSummary(0, hands);
+            const strategy = new Strategy(hands[0], deck, game_summary);
             if (! strategy.seeSuggestionSkipped) {
                 // Some strategies do not care if other players' suggestions
                 // get answered.

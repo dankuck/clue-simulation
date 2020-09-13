@@ -1,11 +1,13 @@
 const Tournament = require('./Tournament.js');
 const ExampleStrategy = require('./Strategies/ExampleStrategy');
 const SimpleStrategy = require('./Strategies/SimpleStrategy');
+const SuggestiveStrategy = require('./Strategies/SuggestiveStrategy');
 const { throttle } = require('lodash');
 
 const strategies = {
     ExampleStrategy,
     SimpleStrategy,
+    SuggestiveStrategy,
 };
 
 const tournament = new Tournament({

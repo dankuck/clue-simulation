@@ -133,6 +133,19 @@ Deck.buildStandardDeck = function () {
     ]);
 };
 
+class GameSummary
+{
+    constructor(position, hands)
+    {
+        this.position = position;
+        this.hands = hands.map(hand => {
+            return {
+                length: hand.length,
+            };
+        });
+    }
+};
+
 class Suggestion
 {
     constructor(type, suspect, weapon, room)
@@ -152,7 +165,7 @@ class SuggestionResult
     {
         Object.assign(this, data);
     }
-}
+};
 
 function suggest(...params)
 {
@@ -226,7 +239,13 @@ class ClueGame
 
         this.envelope = envelope;
         this.hands = [...hands];
-        this.players = strategies.map(strategy => new strategy(hands.shift(), this.deck));
+        this.players = strategies.map(
+            (strategy, position) => new strategy(
+                hands.shift(),
+                this.deck,
+                new GameSummary(position, this.hands)
+            )
+        );
 
         this.turn = 0;
         this.steps = 0;
@@ -453,4 +472,5 @@ module.exports = {
     Suggestion,
     suggest,
     accuse,
+    GameSummary,
 };

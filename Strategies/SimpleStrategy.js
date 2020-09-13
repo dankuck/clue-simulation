@@ -2,11 +2,14 @@ const { suggest, accuse, Card } = require('../Clue.js');
 const { sample } = require('lodash');
 
 /**
- * Strategy uses a simple process of elimination
+ * SimpleStrategy uses a simple process of elimination using only the cards
+ * that it is shown. It makes suggestions using random cards that have no been
+ * eliminated and it makes an accusation only when one card of each type
+ * remains.
  */
 class SimpleStrategy
 {
-    constructor(hand, deck)
+    constructor(hand, deck, game_summary)
     {
         this.hand = hand;
         this.suspects = deck.getSuspects();
@@ -32,7 +35,7 @@ class SimpleStrategy
         }
     }
 
-    seeCard({suggestion, card, player})
+    seeCard({card})
     {
         this.eliminate(card);
     }

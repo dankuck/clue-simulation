@@ -7,6 +7,7 @@ const {
     Suggestion,
     suggest,
     accuse,
+    GameSummary,
 } = require('../Clue.js');
 const ExampleStrategy = require('../Strategies/ExampleStrategy.js');
 const SimpleStrategy = require('../Strategies/SimpleStrategy.js');
@@ -163,14 +164,39 @@ describe('Clue', function () {
         });
     });
 
+    describe('GameSummary', function () {
+        it('should instantiate', function () {
+            new GameSummary(0, []);
+        });
+
+        it('should scrub some data', function () {
+            const deck = Deck.buildStandardDeck();
+            const {hands} = deck.divy(4);
+            const game_info = new GameSummary(2, hands);
+            equal(2, game_info.position);
+            equal(4, game_info.hands.length);
+            equal(5, game_info.hands[0].length);
+            equal(5, game_info.hands[1].length);
+            equal(4, game_info.hands[2].length);
+            equal(4, game_info.hands[3].length);
+        });
+    });
+
     describe('ClueGame', function () {
         it('should instantiate', function () {
             class Strategy {
+                constructor(...params) {
+                    caughtParams = params;
+                }
             };
+            let caughtParams;
             const game = new ClueGame(Deck.buildStandardDeck(), [Strategy]);
             assert(game.deck);
             equal(1, game.players.length);
             equal(1, game.hands.length);
+            assert(caughtParams[0] instanceof Hand);
+            assert(caughtParams[1] instanceof Deck);
+            assert(caughtParams[2] instanceof GameSummary);
         });
 
         it('should play with a cheater', function () {

@@ -8,7 +8,6 @@ const {
     suggest,
     accuse,
 } = require('../Clue.js');
-const ExampleStrategy = require('../Strategies/ExampleStrategy.js');
 const SimpleStrategy = require('../Strategies/SimpleStrategy.js');
 const testStrategy = require('./testStrategy.js');
 const assert = require('assert');

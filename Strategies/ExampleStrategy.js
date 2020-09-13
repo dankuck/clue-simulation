@@ -6,16 +6,13 @@ const { suggest, accuse, Card } = require('../Clue.js');
 class ExampleStrategy
 {
     /**
-     * The constructor must accept a Hand and a Deck object.
+     * The constructor must accept a Hand, a Deck, and a GameSummary object.
      * The hand contains the cards assigned to this player.
      * The deck contains all the cards in the game.
      * What you do with them is up to you.
      */
-    constructor(hand, deck)
+    constructor(hand, deck, game_summary)
     {
-        if (! hand) throw new Error('No hand given');
-        if (! deck) throw new Error('No deck given');
-        this.hand = hand;
         this.deck = deck;
     }
 
@@ -30,8 +27,9 @@ class ExampleStrategy
      */
     move()
     {
-        // This strategy is pretty bad, because it randomly accuses or suggests
-        // the first known suspect, weapon, and room.
+        // This strategy is pretty bad, because it randomly chooses to accuse
+        // or suggest, and the cards are the first known suspect, weapon, and
+        // room every time.
         const suspect = this.deck.getSuspects()[0];
         const weapon  = this.deck.getWeapons()[0];
         const room    = this.deck.getRooms()[0];
