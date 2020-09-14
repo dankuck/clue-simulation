@@ -2,6 +2,7 @@ const Tournament = require('./Tournament.js');
 const ExampleStrategy = require('./Strategies/ExampleStrategy');
 const SimpleStrategy = require('./Strategies/SimpleStrategy');
 const SuggestiveStrategy = require('./Strategies/SuggestiveStrategy');
+const CageySuggestiveStrategy = require('./Strategies/CageySuggestiveStrategy');
 const { throttle } = require('lodash');
 const RandomIterator = Tournament.RandomIterator;
 const GameSet = require('./GameSet.js');
@@ -10,6 +11,7 @@ const strategies = {
     ExampleStrategy,
     SimpleStrategy,
     SuggestiveStrategy,
+    CageySuggestiveStrategy,
 };
 
 const tournament = new Tournament({
