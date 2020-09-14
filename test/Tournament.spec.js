@@ -6,6 +6,7 @@ const {
     notDeepStrictEqual: notEqual,
 } = assert;
 const PermutationIterator = Tournament.PermutationIterator;
+const RandomIterator = Tournament.RandomIterator;
 
 describe('Tournament', function () {
 
@@ -43,7 +44,7 @@ describe('Tournament', function () {
 
         it('should run 1 game with a custom iterator', function () {
             const tournament = new Tournament({
-                iterator: class {
+                iterator: () => new class {
                     next() {
                         if (this.done) {
                             return null;
@@ -334,14 +335,60 @@ describe('Tournament', function () {
             assert(!iterator.next());
         });
     });
+
+    describe('RandomIterator', function () {
+        it('should instantiate', function () {
+            new RandomIterator([], 1, 2, 100);
+        });
+
+        it('should give from minimum to maximum, inclusive', function () {
+            const options = ['a', 'b', 'c'];
+            const iterator = new RandomIterator(options, 3, 5, 100);
+            const permutation = iterator.next();
+            assert(permutation.length >= 3);
+            assert(permutation.length <= 5);
+        });
+
+        it('should give to exactly the limit', function () {
+            const options = ['a', 'b', 'c'];
+            const iterator = new RandomIterator(options, 3, 5, 100);
+            for (let i = 0; i < 100; i++) {
+                iterator.next();
+            }
+            const permutation = iterator.next();
+            assert(permutation === null);
+        });
+
+        it('should give some results for each of minimum, maximum, and in between', function () {
+            const options = ['a', 'b', 'c'];
+            const iterator = new RandomIterator(options, 3, 5, 100);
+            let permutation;
+            const counts = {
+                3: false,
+                4: false,
+                5: false,
+            };
+            while (permutation = iterator.next()) {
+                counts[permutation.length] = true;
+            }
+            assert(counts[3]);
+            assert(counts[4]);
+            assert(counts[5]);
+        });
+
+        it('should only give results from the option set', function () {
+            const options = ['a', 'b', 'c'];
+            const iterator = new RandomIterator(options, 3, 5, 100);
+            let permutation;
+            while (permutation = iterator.next()) {
+                assert(
+                    permutation
+                        .filter(option => options.includes(option))
+                        .length
+                    ===
+                    permutation.length
+                );
+            }
+        });
+    });
 });
-
-
-    function describeGame(game)
-    {
-        const d = [];
-        d.push('Strategies: ' + game.strategies.map(s => s.name).join(', '));
-        d.push('Errors: ' + game.errors.length);
-        d.push('Steps: ' + game.steps);
-        return d.join("\n");
-    }

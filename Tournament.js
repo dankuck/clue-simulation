@@ -1,4 +1,5 @@
 const { ClueGame, Deck } = require('./Clue.js');
+const { sample } = require('lodash');
 
 class Tournament
 {
@@ -10,8 +11,11 @@ class Tournament
 
     buildIterator()
     {
-        const Iterator = this.config.iterator || PermutationIterator;
-        return new Iterator(this.config.strategies, this.config.min || 3, this.config.max || 6);
+        if (this.config.iterator) {
+            return this.config.iterator();
+        } else {
+            return new PermutationIterator(this.config.strategies, this.config.min || 3, this.config.max || 6);
+        }
     }
 
     play(rounds = 1, cb = null)
@@ -95,6 +99,35 @@ class PermutationIterator
     }
 }
 
+class RandomIterator
+{
+    constructor(strategies, min, max, limit)
+    {
+        this.strategies = strategies;
+        this.min = min;
+        this.max = max;
+        this.limit = limit;
+
+        this.count = 0;
+    }
+
+    next()
+    {
+        if (this.count >= this.limit) {
+            return null;
+        }
+        this.count++;
+
+        const length = Math.round(Math.random() * (this.max - this.min)) + this.min;
+        const strategies = [];
+        for (let i = 0; i < length; i++) {
+            strategies.push(sample(this.strategies));
+        }
+        return strategies;
+    }
+}
+
 Tournament.PermutationIterator = PermutationIterator;
+Tournament.RandomIterator = RandomIterator;
 
 module.exports = Tournament;

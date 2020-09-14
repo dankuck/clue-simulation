@@ -62,7 +62,7 @@ class ExampleStrategy
      * card to the player with the given ID. You may also choose to record the
      * fact that that player saw that card.
      */
-    chooseCardToShow(card, player)
+    chooseCardToShow(cards, player)
     {
     }
 
