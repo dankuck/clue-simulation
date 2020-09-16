@@ -2,10 +2,16 @@ const { suggest, accuse, Card } = require('../Clue.js');
 const { sample } = require('lodash');
 
 /**
- * SimpleStrategy uses a simple process of elimination using only the cards
- * that it is shown. It makes suggestions using random cards that have no been
- * eliminated and it makes an accusation only when one card of each type
- * remains.
+ |---------------------
+ | SimpleStrategy
+ |---------------------
+ | SimpleStrategy makes random suggestions and eliminates the cards it is
+ | shown until it has just one of each card. This operates very much like the
+ | strategy prescribed in the Clue instructions.
+ |
+ | The only missing piece is that this strategy does NOT notice when it gets
+ | everything right in a suggestion. This should happen 1/324 suggestions, so
+ | this is somewhat debilitating.
  */
 class SimpleStrategy
 {

@@ -3,11 +3,20 @@ const { sample } = require('lodash');
 const SimpleStrategy = require('./SimpleStrategy');
 
 /**
- * SuggestiveStrategy pays attention to both the cards it sees and the
- * suggestions it sees. When it sees other players refute suggestions for each
- * other, it remembers those suggestions and rechecks them until it can narrow
- * down just what card was shown. Then it operates in an elimination fashion,
- * just like SimpleStrategy.
+ |---------------------
+ | SuggestiveStrategy
+ |---------------------
+ | SuggestiveStrategy works on elimination, just like SimpleStrategy, however
+ | it pays attention to what other players are doing. If it sees another player
+ | A show a card to another player B, SuggestiveStrategy attempts to deduce
+ | what card was shown based on its knowledge about what cards are known to NOT
+ | be held by player A.
+ |
+ | If it cannot deduce the card, it remembers the event for later, and
+ | reattempts the deduction.
+ |
+ | This strategy does NOT notice when other players CANNOT refute a suggestion.
+ | Since that can also help us to deduce a card, this failure is debilitating.
  */
 class SuggestiveStrategy extends SimpleStrategy
 {
@@ -17,7 +26,7 @@ class SuggestiveStrategy extends SimpleStrategy
         this.suggestions = [];
         this.holders = new Map();
         const position = game_summary.position;
-        this.hand.forEach(card => this.markHolder(card, position));
+        this.hand.forEach(card => this.markCardHolder(card, position));
     }
 
     allOutstanding()
@@ -29,7 +38,7 @@ class SuggestiveStrategy extends SimpleStrategy
         ];
     }
 
-    markHolder(card, player)
+    markCardHolder(card, player)
     {
         this.holders.set(card, player);
     }
@@ -37,7 +46,7 @@ class SuggestiveStrategy extends SimpleStrategy
     seeCard({card, player})
     {
         this.eliminate(card);
-        this.markHolder(card, player);
+        this.markCardHolder(card, player);
         this.checkSavedSuggestions();
     }
 
@@ -81,7 +90,7 @@ class SuggestiveStrategy extends SimpleStrategy
         if (remaining.length === 1) {
             // Then we know that must be the card that was shown
             this.eliminate(remaining[0]);
-            this.markHolder(remaining[0], player);
+            this.markCardHolder(remaining[0], player);
             return true;
         } else {
             // Time to save the suggestion for later

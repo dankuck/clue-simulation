@@ -9,23 +9,22 @@ const {
     accuse,
     GameSummary,
 } = require('../Clue.js');
-const ShowSame = require('../Strategies/ShowSameSubStrategy.js');
-const testStrategy = require('./testStrategy.js');
+const ShowSameSubStrategy = require('../Strategies/ShowSameSubStrategy');
 const assert = require('assert');
 const {
     deepStrictEqual:    equal,
     notDeepStrictEqual: notEqual,
 } = assert;
 
-describe('ShowSame', function () {
+describe('ShowSameSubStrategy', function () {
     it('should show a card and not require instantiation', function () {
         const cards = [
             new Card(Card.SUSPECT, 'Mrs. White'),
             new Card(Card.WEAPON, 'White rabbit'),
             new Card(Card.ROOM, 'White room'),
         ];
-        const chooseCardToShow = ShowSame.buildChooseCardToShow();
-        const card = chooseCardToShow(cards, 1);
+        const showSame = new ShowSameSubStrategy();
+        const card = showSame.chooseCardToShow(cards, 1);
         assert(card);
     });
 
@@ -35,9 +34,9 @@ describe('ShowSame', function () {
             new Card(Card.WEAPON, 'White rabbit'),
             new Card(Card.ROOM, 'White room'),
         ];
-        const chooseCardToShow = ShowSame.buildChooseCardToShow();
-        const card1 = chooseCardToShow(cards, 1);
-        const card2 = chooseCardToShow(cards, 1);
+        const showSame = new ShowSameSubStrategy();
+        const card1 = showSame.chooseCardToShow(cards, 1);
+        const card2 = showSame.chooseCardToShow(cards, 1);
         equal(card1, card2);
     });
 
@@ -52,10 +51,10 @@ describe('ShowSame', function () {
             new Card(Card.WEAPON, 'Black sheep'),
             new Card(Card.ROOM, 'Black rock'),
         ];
-        const chooseCardToShow = ShowSame.buildChooseCardToShow();
-        const card1 = chooseCardToShow(cards1, 1);
+        const showSame = new ShowSameSubStrategy();
+        const card1 = showSame.chooseCardToShow(cards1, 1);
         cards2[0] = card1; // same, should be preferred
-        const card2 = chooseCardToShow(cards2, 2);
+        const card2 = showSame.chooseCardToShow(cards2, 2);
         equal(card1, card2);
     });
 });

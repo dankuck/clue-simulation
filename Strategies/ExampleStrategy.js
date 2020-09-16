@@ -1,7 +1,18 @@
 const { suggest, accuse, Card } = require('../Clue.js');
 
 /**
- * Your strategy must be a class or a function that can be constructed.
+ |-------------------------
+ | ExampleStrategy
+ |-------------------------
+ | This strategy is about as clever as a small child. Not my child, mind you.
+ | But some other person's dumber child.
+ |
+ | This strategy only exists to explain to you how to build a strategy class.
+ */
+
+/**
+ * Your strategy must be a class or a function that can be constructed like in
+ * classic JavaScript.
  */
 class ExampleStrategy
 {
