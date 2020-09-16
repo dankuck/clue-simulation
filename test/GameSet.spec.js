@@ -104,6 +104,28 @@ describe('GameSet', function () {
             equal(3, set.query().hasStrategyAlone(X).get().length);
         });
 
+        it('should give games where a strategy is found an exact number of times', function () {
+            const set = new GameSet();
+            const X = {}, Y = {}, Z = {};
+            set.add({strategies: [X, Y, Z]});
+            set.add({strategies: [X, Y, Z, X]});
+            set.add({strategies: [X, Y, Z, Y]});
+            set.add({strategies: [X, Y, Z, Z]});
+            equal(1, set.query().hasTeamSize(X, 2).get().length);
+        });
+
+        it('should groupBy', function () {
+            const set = new GameSet();
+            const X = {}, Y = {}, Z = {};
+            set.add({arrangement: 'X,Yx2'});
+            set.add({arrangement: 'X,Yx2'});
+            set.add({arrangement: 'Xx2,Y'});
+            set.add({arrangement: 'Xx3,Yx2'});
+            set.add({arrangement: 'X,Y'});
+            const groups = set.query().groupBy('arrangement');
+            equal(4, groups.length);
+        });
+
         it('should count', function () {
             const set = new GameSet();
             const X = {}, Y = {}, Z = {};

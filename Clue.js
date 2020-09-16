@@ -380,13 +380,16 @@ class ClueGame
             const cards = [suspect, weapon, room].filter(card => hand.has(card));
             if (cards.length > 0) {
                 const card = this.chooseCardToShow(player, cards, asker);
-                this.showCard(card, player, asker, suggestion, skips);
+                this.showCard(card, player, asker, suggestion);
                 return refute(asker, suggestion, player, card, skips);
             } else {
                 skips++;
                 this.showNoCards(player, asker, suggestion);
             }
         }
+        // TODO: Should showNoCardsAnywhere(suggestion) to the asker so they
+        // can know that no one had the cards, without needing to keep track of
+        // all the players who don't have the cards
     }
 
     handleAccusation(accusation, player)

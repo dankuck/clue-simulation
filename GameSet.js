@@ -79,14 +79,47 @@ class Query
 
     hasStrategyAlone(strategy)
     {
+        return this.hasTeamSize(strategy, 1);
+    }
+
+    hasTeamSize(strategy, count)
+    {
         return new Query(
             () => this.get()
                 .filter(
                     result => result.strategies
                         .filter(s => s === strategy)
-                        .length === 1
+                        .length === count
                 )
         );
+    }
+
+    groupBy(groupNamer)
+    {
+        if (! (groupNamer instanceof Function)) {
+            const field = groupNamer;
+            groupNamer = result => result[field];
+        }
+        const groups = {};
+        this.get()
+            .forEach(result => {
+                const name = groupNamer(result);
+                if (!groups[name]) {
+                    groups[name] = [];
+                }
+                groups[name].push(result);
+            });
+        return Object.keys(groups)
+            .sort()
+            .map(name => {
+                return {
+                    name,
+                    plays: new Query (
+                        () => this.get()
+                            .filter(result => groupNamer(result) === name)
+                    ),
+                };
+            });
     }
 }
 
