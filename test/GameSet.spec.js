@@ -45,6 +45,15 @@ describe('GameSet', function () {
             equal(2, set.query().hasStrategy(X).get().length);
         });
 
+        it('should give games without a certain strategy involved', function () {
+            const set = new GameSet();
+            const X = {}, Y = {};
+            set.add({strategies: [X]});
+            set.add({strategies: [X, Y]});
+            set.add({strategies: [Y]});
+            equal(1, set.query().doesntHaveStrategy(X).get().length);
+        });
+
         it('should give games with a certain winning strategy', function () {
             const set = new GameSet();
             const X = {}, Y = {};

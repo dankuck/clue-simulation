@@ -27,6 +27,16 @@ class Query
         );
     }
 
+    doesntHaveStrategy(strategy)
+    {
+        return new Query(
+            () => this.get()
+                .filter(
+                    result => ! result.strategies.includes(strategy)
+                )
+        );
+    }
+
     hasWinningStrategy(strategy)
     {
         return new Query(

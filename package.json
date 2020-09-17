@@ -5,7 +5,8 @@
   "main": "proto.js",
   "scripts": {
     "test": "mocha --glob '*.spec.js'",
-    "tournament": "node ./run.js"
+    "breakdown": "node ./run.js Breakdown",
+    "ab": "node ./run.js HypothesisTester"
   },
   "author": "",
   "license": "ISC",

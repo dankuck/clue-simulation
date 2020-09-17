@@ -1,6 +1,31 @@
 const { ClueGame, Deck } = require('./Clue.js');
 const { sample } = require('lodash');
 
+/**
+ |----------------------
+ | Tournament
+ |----------------------
+ | The tournament will arrange strategies and run a ClueGame to get them to play.
+ |
+ | Instantiate it with a config object:
+ |   iterator   : provide a callback that builds a new iterator. The iterator
+ |                  should have a next() method that returns an array of
+ |                  strategies or null when it's done
+ |   If `iterator` is not provided, provide these keys and a default iterator
+ |   will be used:
+ |   strategies : provide an array of strategy classes (unless you provide
+ |                  `iterator`)
+ |   min        : the lowest number of strategies to play in a game, default 3
+ |   max        : the highest number of strategies to play in a game, default 6
+ |
+ | Call tournament.play(numberOfRounds, callback) to make it run. The callback
+ | should receive an object that represents a completed game. The object has
+ | these fields:
+ |   winner     : A Strategy instantiation
+ |   game       : A ClueGame instantiation
+ |   strategies : An array of strategy classes
+ |   winningStrategy : The strategy class of the winning player
+ */
 class Tournament
 {
     constructor(config = {})
