@@ -1,17 +1,17 @@
 const { suggest, accuse, Card } = require('../Clue.js');
 const { sample } = require('lodash');
-const SuggestiveStrategy = require('./SuggestiveStrategy');
+const TheSuggestionWatcher = require('./TheSuggestionWatcher');
 const ShowSameSubStrategy = require('./ShowSameSubStrategy');
 
 /**
  |--------------------------
- | CageySuggestiveStrategy
+ | TheCageySuggestionWatcher
  |--------------------------
- | This works like SuggestiveStrategy, which has docs that read:
+ | This works like TheSuggestionWatcher, which has docs that read:
  |
- |   SuggestiveStrategy works on elimination, just like SimpleStrategy, however
+ |   TheSuggestionWatcher works on elimination, just like TheEliminator, however
  |   it pays attention to what other players are doing. If it sees another
- |   player A show a card to another player B, SuggestiveStrategy attempts to
+ |   player A show a card to another player B, TheSuggestionWatcher attempts to
  |   deduce what card was shown based on its knowledge about what cards are
  |   known to NOT be held by player A.
  |
@@ -22,7 +22,7 @@ const ShowSameSubStrategy = require('./ShowSameSubStrategy');
  |   suggestion. Since that can also help us to deduce a card, this failure
  |   is debilitating.
  |
- | CageySuggestiveStrategy also uses ShowSameSubStrategy to ensure the same
+ | TheCageySuggestionWatcher also uses ShowSameSubStrategy to ensure the same
  | card is shown each time the same other-player asks for it.
  |
  | ShowSameSubStrategy has docs that read:
@@ -46,7 +46,7 @@ const ShowSameSubStrategy = require('./ShowSameSubStrategy');
  |   In this way we attempt to ensure that, if we have a choice, we choose
  |   cards that release the least information to the other players
  */
-class CageySuggestiveStrategy extends SuggestiveStrategy
+class TheCageySuggestionWatcher extends TheSuggestionWatcher
 {
     constructor(...params)
     {
@@ -60,4 +60,4 @@ class CageySuggestiveStrategy extends SuggestiveStrategy
     }
 }
 
-module.exports = CageySuggestiveStrategy;
+module.exports = TheCageySuggestionWatcher;

@@ -8,7 +8,7 @@ const {
     suggest,
     accuse,
 } = require('../Clue.js');
-const SimpleStrategy = require('../Strategies/SimpleStrategy.js');
+const TheEliminator = require('../Strategies/TheEliminator.js');
 const testStrategy = require('./testStrategy.js');
 const assert = require('assert');
 const {
@@ -16,9 +16,9 @@ const {
     notDeepStrictEqual: notEqual,
 } = assert;
 
-describe('SimpleStrategy', function () {
+describe('TheEliminator', function () {
 
-    testStrategy(SimpleStrategy);
+    testStrategy(TheEliminator);
 
     describe('strategy', function () {
         it('never chooses from its own hand', function () {
@@ -32,7 +32,7 @@ describe('SimpleStrategy', function () {
                 new Card(Card.ROOM, 'Pool Housette'),
             ]);
             const {envelope, hands: [hand]} = deck.divy(1);
-            const strategy = new SimpleStrategy(hand, deck);
+            const strategy = new TheEliminator(hand, deck);
             const suggestion = strategy.move();
 
             notEqual(hand.getSuspects()[0], suggestion.suspect);
@@ -56,14 +56,14 @@ describe('SimpleStrategy', function () {
                 new Card(Card.SUSPECT, 'Mr. Poolboi'),
             ]);
             const {envelope, hands: [hand1, hand2]} = deck.divy(2);
-            const strategy = new SimpleStrategy(hand1, deck);
+            const strategy = new TheEliminator(hand1, deck);
             const card = hand2.getSuspects()[0];
             const suggestion1 = suggest(
                 card,
                 envelope.getWeapons()[0],
                 envelope.getRooms()[0]
             );
-            // SimpleStrategy isn't smart enough to know that it did not
+            // TheEliminator isn't smart enough to know that it did not
             // make this suggestion.
             // We use this to tell it what card hand2 has.
             strategy.seeCard({suggestion1, card, player: 2});
@@ -84,7 +84,7 @@ describe('SimpleStrategy', function () {
                 new Card(Card.ROOM, 'Pool Housette'),
             ]);
             const {envelope, hands: [hand]} = deck.divy(1);
-            const strategy = new SimpleStrategy(hand, deck);
+            const strategy = new TheEliminator(hand, deck);
             const suggestion = strategy.move();
             equal('ACCUSATION', suggestion.type);
             equal(envelope.getSuspects()[0], suggestion.suspect);

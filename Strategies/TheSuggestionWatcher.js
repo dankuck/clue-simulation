@@ -1,14 +1,14 @@
 const { suggest, accuse, Card } = require('../Clue.js');
 const { sample } = require('lodash');
-const SimpleStrategy = require('./SimpleStrategy');
+const TheEliminator = require('./TheEliminator');
 
 /**
  |---------------------
- | SuggestiveStrategy
+ | TheSuggestionWatcher
  |---------------------
- | SuggestiveStrategy works on elimination, just like SimpleStrategy, however
+ | TheSuggestionWatcher works on elimination, just like TheEliminator, however
  | it pays attention to what other players are doing. If it sees another player
- | A show a card to another player B, SuggestiveStrategy attempts to deduce
+ | A show a card to another player B, TheSuggestionWatcher attempts to deduce
  | what card was shown based on its knowledge about what cards are known to NOT
  | be held by player A.
  |
@@ -18,7 +18,7 @@ const SimpleStrategy = require('./SimpleStrategy');
  | This strategy does NOT notice when other players CANNOT refute a suggestion.
  | Since that can also help us to deduce a card, this failure is debilitating.
  */
-class SuggestiveStrategy extends SimpleStrategy
+class TheSuggestionWatcher extends TheEliminator
 {
     constructor(hand, deck, game_summary)
     {
@@ -99,4 +99,4 @@ class SuggestiveStrategy extends SimpleStrategy
     }
 }
 
-module.exports = SuggestiveStrategy;
+module.exports = TheSuggestionWatcher;

@@ -10,7 +10,7 @@ const {
     GameSummary,
 } = require('../Clue.js');
 const ExampleStrategy = require('../Strategies/ExampleStrategy.js');
-const SimpleStrategy = require('../Strategies/SimpleStrategy.js');
+const TheEliminator = require('../Strategies/TheEliminator.js');
 const testStrategy = require('./testStrategy.js');
 const assert = require('assert');
 const {

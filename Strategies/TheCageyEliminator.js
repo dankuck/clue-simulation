@@ -1,14 +1,14 @@
 const { suggest, accuse, Card } = require('../Clue.js');
 const ShowSameSubStrategy = require('./ShowSameSubStrategy');
-const SimpleStrategy = require('./SimpleStrategy');
+const TheEliminator = require('./TheEliminator');
 
 /**
  |--------------------------
- | CageySimpleStrategy
+ | TheCageyEliminator
  |--------------------------
- | This works like SimpleStrategy, which has docs that read:
+ | This works like TheEliminator, which has docs that read:
  |
- |   SimpleStrategy makes random suggestions and eliminates the cards it is
+ |   TheEliminator makes random suggestions and eliminates the cards it is
  |   shown until it has just one of each card. This operates very much like the
  |   strategy prescribed in the Clue instructions.
  |
@@ -16,7 +16,7 @@ const SimpleStrategy = require('./SimpleStrategy');
  |   everything right in a suggestion. This should happen 1/324 suggestions, so
  |   this is somewhat debilitating.
  |
- | CageySimpleStrategy also uses ShowSameSubStrategy to ensure the same card is
+ | TheCageyEliminator also uses ShowSameSubStrategy to ensure the same card is
  | shown each time the same other-player asks for it.
  |
  | ShowSameSubStrategy has docs that read:
@@ -40,7 +40,7 @@ const SimpleStrategy = require('./SimpleStrategy');
  |   In this way we attempt to ensure that, if we have a choice, we choose
  |   cards that release the least information to the other players
  */
-class CageySimpleStrategy extends SimpleStrategy
+class TheCageyEliminator extends TheEliminator
 {
     constructor(...params)
     {
@@ -54,4 +54,4 @@ class CageySimpleStrategy extends SimpleStrategy
     }
 }
 
-module.exports = CageySimpleStrategy;
+module.exports = TheCageyEliminator;

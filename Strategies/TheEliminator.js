@@ -3,9 +3,9 @@ const { sample } = require('lodash');
 
 /**
  |---------------------
- | SimpleStrategy
+ | TheEliminator
  |---------------------
- | SimpleStrategy makes random suggestions and eliminates the cards it is
+ | TheEliminator makes random suggestions and eliminates the cards it is
  | shown until it has just one of each card. This operates very much like the
  | strategy prescribed in the Clue instructions.
  |
@@ -13,7 +13,7 @@ const { sample } = require('lodash');
  | everything right in a suggestion. This should happen 1/324 suggestions, so
  | this is somewhat debilitating.
  */
-class SimpleStrategy
+class TheEliminator
 {
     constructor(hand, deck, game_summary)
     {
@@ -54,4 +54,4 @@ class SimpleStrategy
     }
 }
 
-module.exports = SimpleStrategy;
+module.exports = TheEliminator;

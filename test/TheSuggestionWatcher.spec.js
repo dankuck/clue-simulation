@@ -9,7 +9,7 @@ const {
     accuse,
     GameSummary,
 } = require('../Clue.js');
-const SuggestiveStrategy = require('../Strategies/SuggestiveStrategy.js');
+const TheSuggestionWatcher = require('../Strategies/TheSuggestionWatcher.js');
 const testStrategy = require('./testStrategy.js');
 const assert = require('assert');
 const {
@@ -17,9 +17,9 @@ const {
     notDeepStrictEqual: notEqual,
 } = assert;
 
-describe('SuggestiveStrategy', function () {
+describe('TheSuggestionWatcher', function () {
 
-    testStrategy(SuggestiveStrategy);
+    testStrategy(TheSuggestionWatcher);
 
     describe('strategy', function () {
         it('never chooses from its own hand', function () {
@@ -34,7 +34,7 @@ describe('SuggestiveStrategy', function () {
             ]);
             const {envelope, hands: [hand]} = deck.divy(1);
             const game_summary = new GameSummary(0, [hand]);
-            const strategy = new SuggestiveStrategy(hand, deck, game_summary);
+            const strategy = new TheSuggestionWatcher(hand, deck, game_summary);
             const suggestion = strategy.move();
 
             notEqual(hand.getSuspects()[0], suggestion.suspect);
@@ -59,14 +59,14 @@ describe('SuggestiveStrategy', function () {
             ]);
             const {envelope, hands: [hand1, hand2]} = deck.divy(2);
             const game_summary = new GameSummary(0, [hand1, hand2]);
-            const strategy = new SuggestiveStrategy(hand1, deck, game_summary);
+            const strategy = new TheSuggestionWatcher(hand1, deck, game_summary);
             const card = hand2.getSuspects()[0];
             const suggestion1 = suggest(
                 card,
                 envelope.getWeapons()[0],
                 envelope.getRooms()[0]
             );
-            // SuggestiveStrategy isn't smart enough to know that it did not
+            // TheSuggestionWatcher isn't smart enough to know that it did not
             // make this suggestion.
             // We use this to tell it what card hand2 has.
             strategy.seeCard({suggestion1, card, player: 2});
@@ -88,7 +88,7 @@ describe('SuggestiveStrategy', function () {
             ]);
             const {envelope, hands: [hand]} = deck.divy(1);
             const game_summary = new GameSummary(0, [hand]);
-            const strategy = new SuggestiveStrategy(hand, deck, game_summary);
+            const strategy = new TheSuggestionWatcher(hand, deck, game_summary);
             const suggestion = strategy.move();
             equal('ACCUSATION', suggestion.type);
             equal(envelope.getSuspects()[0], suggestion.suspect);
@@ -112,14 +112,14 @@ describe('SuggestiveStrategy', function () {
             const hand1 = new Hand(cards.slice(3, 5));
             const hand2 = new Hand(cards.slice(5, 6));
             const game_summary = new GameSummary(0, [hand1, hand2]);
-            const strategy = new SuggestiveStrategy(hand1, deck, game_summary);
+            const strategy = new TheSuggestionWatcher(hand1, deck, game_summary);
             const card = hand2.getWeapons()[0];
             const suggestion1 = suggest(
                 hand1.getSuspects()[0],
                 card,
                 hand1.getRooms()[0],
             );
-            // Since SuggestiveStrategy knows what cards it has, it can infer
+            // Since TheSuggestionWatcher knows what cards it has, it can infer
             // that the card shown (to whom? doesn't matter) is the third
             // card in the set.
             strategy.seeSuggestionAnswered({suggestion: suggestion1, player: 2});
@@ -156,7 +156,7 @@ describe('SuggestiveStrategy', function () {
             const hand2 = new Hand(cards.slice(5, 6));
             const hand3 = new Hand(cards.slice(6, 7));
             const game_summary = new GameSummary(0, [hand1, hand2, hand3]);
-            const strategy = new SuggestiveStrategy(hand1, deck, game_summary);
+            const strategy = new TheSuggestionWatcher(hand1, deck, game_summary);
             const suggestion1 = suggest(
                 // Get the suspect from hand2.
                 hand3.getSuspects()[0],
@@ -165,7 +165,7 @@ describe('SuggestiveStrategy', function () {
                 // Strategy only knows that the room is eliminated, so far.
                 hand1.getRooms()[0],
             );
-            // SuggestiveStrategy does not have enough information to infer
+            // TheSuggestionWatcher does not have enough information to infer
             // anything about this suggestion yet, but it will remember that
             // player 2 refuted it.
             strategy.seeSuggestionAnswered({suggestion: suggestion1, player: 2});

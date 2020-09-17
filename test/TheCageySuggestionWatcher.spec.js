@@ -7,8 +7,9 @@ const {
     Suggestion,
     suggest,
     accuse,
+    GameSummary,
 } = require('../Clue.js');
-const CageySimpleStrategy = require('../Strategies/CageySimpleStrategy.js');
+const TheCageySuggestionWatcher = require('../Strategies/TheCageySuggestionWatcher.js');
 const testStrategy = require('./testStrategy.js');
 const assert = require('assert');
 const {
@@ -16,8 +17,8 @@ const {
     notDeepStrictEqual: notEqual,
 } = assert;
 
-describe('CageySimpleStrategy', function () {
+describe('TheCageySuggestionWatcher', function () {
 
-    testStrategy(CageySimpleStrategy);
+    testStrategy(TheCageySuggestionWatcher);
 
 });
