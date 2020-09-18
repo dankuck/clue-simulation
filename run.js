@@ -1,6 +1,7 @@
 const Tournament = require('./Tournament.js');
 const ExampleStrategy = require('./Strategies/ExampleStrategy');
 const TheEliminator = require('./Strategies/TheEliminator');
+const TheLuckyEliminator = require('./Strategies/TheLuckyEliminator');
 const TheSuggestionWatcher = require('./Strategies/TheSuggestionWatcher');
 const TheCageySuggestionWatcher = require('./Strategies/TheCageySuggestionWatcher');
 const TheCageyEliminator = require('./Strategies/TheCageyEliminator');
@@ -14,6 +15,7 @@ const strategies = {
     // ExampleStrategy,
     TheEliminator,
     TheCageyEliminator,
+    TheLuckyEliminator,
     TheSuggestionWatcher,
     TheCageySuggestionWatcher,
 };

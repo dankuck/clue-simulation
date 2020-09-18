@@ -387,9 +387,7 @@ class ClueGame
                 this.showNoCards(player, asker, suggestion);
             }
         }
-        // TODO: Should showNoCardsAnywhere(suggestion) to the asker so they
-        // can know that no one had the cards, without needing to keep track of
-        // all the players who don't have the cards
+        this.showNeverRefuted(asker, suggestion);
     }
 
     handleAccusation(accusation, player)
@@ -442,6 +440,12 @@ class ClueGame
         const playerId = this.playerId(player);
         const askerId = this.playerId(asker);
         this.showAllPlayers('SuggestionNotRefuted', {suggestion, player: playerId, asker: askerId}, [player]);
+    }
+
+    showNeverRefuted(asker, suggestion)
+    {
+        const askerId = this.playerId(asker);
+        this.showAllPlayers('SuggestionNeverRefuted', {suggestion, asker: askerId});
     }
 
     showPlayer(player, eventName, data)

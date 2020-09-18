@@ -368,6 +368,45 @@ describe('Clue', function () {
             equal(1, saw.player);
         });
 
+        it('should inform other players when a suggestion is never refuted', function () {
+            class PlayerA
+            {
+                makeSuggestion()
+                {
+                    // PlayerA makes a null suggestion
+                    return suggest(null, null, null);
+                }
+
+                seeSuggestionNeverRefuted()
+                {
+                    playerASaw = true;
+                }
+            }
+            class PlayerB
+            {
+                // PlayerB cannot refute a suggestion with a bunch of nulls.
+                // No code is needed here.
+            }
+            class PlayerC
+            {
+
+                seeSuggestionNeverRefuted()
+                {
+                    playerCSaw = true;
+                }
+            }
+            let playerASaw = false,
+                playerCSaw = false;
+            const game = new ClueGame(
+                Deck.buildStandardDeck(),
+                [PlayerA, PlayerB, PlayerC],
+                {validate: false}
+            );
+            game.step();
+            assert(playerASaw);
+            assert(playerCSaw);
+        });
+
         it('should cut a player out when they accuse incorrectly', function () {
             class PlayerA
             {

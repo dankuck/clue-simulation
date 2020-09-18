@@ -113,6 +113,16 @@ describe('GameSet', function () {
             equal(3, set.query().hasStrategyAlone(X).get().length);
         });
 
+        it('should give games with only the given strategies', function () {
+            const set = new GameSet();
+            const X = {}, Y = {}, Z = {};
+            set.add({strategies: [X, Y]});
+            set.add({strategies: [X, Y, X]});
+            set.add({strategies: [X, Y, Z, Y]});
+            set.add({strategies: [X, Y, Z, Z]});
+            equal(2, set.query().hasOnlyStrategies([X, Y]).get().length);
+        });
+
         it('should give games where a strategy is found an exact number of times', function () {
             const set = new GameSet();
             const X = {}, Y = {}, Z = {};

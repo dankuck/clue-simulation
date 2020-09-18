@@ -77,6 +77,20 @@ class Query
         );
     }
 
+    hasOnlyStrategies(strategies)
+    {
+        return new Query(
+            () => this.get()
+                .filter(
+                    result => result.strategies
+                        .reduce(
+                            (agg, strategy) => agg && strategies.includes(strategy),
+                            true
+                        )
+                )
+        );
+    }
+
     hasGameSize(size)
     {
         return new Query(
