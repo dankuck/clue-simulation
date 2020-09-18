@@ -72,12 +72,12 @@ function testStrategy(Strategy)
             new Strategy(hands[0], deck, game_summary);
         });
 
-        it('should make a move (required)', function () {
+        it('should make a suggestion (required)', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
             const game_summary = new GameSummary(0, hands);
             const strategy = new Strategy(hands[0], deck, game_summary);
-            const suggestion = strategy.move();
+            const suggestion = strategy.makeSuggestion();
             assert(suggestion.type);
             assert(suggestion.suspect);
             equal(Card.SUSPECT, suggestion.suspect.type);
@@ -101,7 +101,7 @@ function testStrategy(Strategy)
             // It's conceivable that some strategy will blow up if we call
             // seeCard with a Suggestion that it didn't create. So we'll ask
             // the strategy to create the Suggestion.
-            const suggestion = strategy.move();
+            const suggestion = strategy.makeSuggestion();
             const card = suggestion.suspect;
             const player = Math.floor(Math.random() * 6);
             strategy.seeCard({suggestion, card, player});
@@ -125,12 +125,12 @@ function testStrategy(Strategy)
             // no whammy
         });
 
-        it('can have a seeSuggestionAnswered method', function () {
+        it('can have a seeSuggestionRefuted method', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
             const game_summary = new GameSummary(0, hands);
             const strategy = new Strategy(hands[0], deck, game_summary);
-            if (! strategy.seeSuggestionAnswered) {
+            if (! strategy.seeSuggestionRefuted) {
                 // Some strategies do not care if other players' suggestions
                 // get answered.
                 this.skip();
@@ -155,17 +155,51 @@ function testStrategy(Strategy)
             const suggestion = suggest(suspects[0], weapons[0], rooms[0]);
             const player = Math.floor(Math.random() * 6);
             const asker = (player + Math.floor(Math.random() * 5)) % 6;
-            strategy.seeSuggestionAnswered({suggestion, player, asker});
+            strategy.seeSuggestionRefuted({suggestion, player, asker});
             // no whammy
         });
 
-        it('can have a seeSuggestionSkipped method', function () {
+        it('can have a seeSuggestionNotRefuted method', function () {
             const deck = buildDeck(1);
             const {hands} = deck.divy(1);
             const game_summary = new GameSummary(0, hands);
             const strategy = new Strategy(hands[0], deck, game_summary);
-            if (! strategy.seeSuggestionSkipped) {
-                // Some strategies do not care if other players' suggestions
+            if (! strategy.seeSuggestionNotRefuted) {
+                // Some strategies do not care if suggestions
+                // get refuted.
+                this.skip();
+            }
+            // Get some cards that are *not* in the player's own hand, to
+            // simulate what it looks like when two other players have cards.
+            const suspects = hands.slice(1)
+                .reduce(
+                    (merged, hand) => merged.concat(hand.getSuspects()),
+                    []
+                );
+            const weapons = hands.slice(1)
+                .reduce(
+                    (merged, hand) => merged.concat(hand.getWeapons()),
+                    []
+                );
+            const rooms = hands.slice(1)
+                .reduce(
+                    (merged, hand) => merged.concat(hand.getRooms()),
+                    []
+                );
+            const suggestion = suggest(suspects[0], weapons[0], rooms[0]);
+            const player = Math.floor(Math.random() * 6);
+            const asker = (player + Math.floor(Math.random() * 5)) % 6;
+            strategy.seeSuggestionNotRefuted({suggestion, player, asker});
+            // no whammy
+        });
+
+        it('can have a seeSuggestionNeverRefuted method', function () {
+            const deck = buildDeck(1);
+            const {hands} = deck.divy(1);
+            const game_summary = new GameSummary(0, hands);
+            const strategy = new Strategy(hands[0], deck, game_summary);
+            if (! strategy.seeSuggestionNeverRefuted) {
+                // Some strategies do not care if suggestions never
                 // get answered.
                 this.skip();
             }
@@ -189,7 +223,7 @@ function testStrategy(Strategy)
             const suggestion = suggest(suspects[0], weapons[0], rooms[0]);
             const player = Math.floor(Math.random() * 6);
             const asker = (player + Math.floor(Math.random() * 5)) % 6;
-            strategy.seeSuggestionSkipped({suggestion, player, asker});
+            strategy.seeSuggestionNeverRefuted({suggestion, asker});
             // no whammy
         });
     });

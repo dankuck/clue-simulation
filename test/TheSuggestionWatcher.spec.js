@@ -35,7 +35,7 @@ describe('TheSuggestionWatcher', function () {
             const {envelope, hands: [hand]} = deck.divy(1);
             const game_summary = new GameSummary(0, [hand]);
             const strategy = new TheSuggestionWatcher(hand, deck, game_summary);
-            const suggestion = strategy.move();
+            const suggestion = strategy.makeSuggestion();
 
             notEqual(hand.getSuspects()[0], suggestion.suspect);
             notEqual(hand.getWeapons()[0], suggestion.weapon);
@@ -70,7 +70,7 @@ describe('TheSuggestionWatcher', function () {
             // make this suggestion.
             // We use this to tell it what card hand2 has.
             strategy.seeCard({suggestion1, card, player: 2});
-            const suggestion2 = strategy.move();
+            const suggestion2 = strategy.makeSuggestion();
             equal(envelope.getSuspects()[0], suggestion2.suspect);
             equal(envelope.getWeapons()[0], suggestion2.weapon);
             equal(envelope.getRooms()[0], suggestion2.room);
@@ -89,7 +89,7 @@ describe('TheSuggestionWatcher', function () {
             const {envelope, hands: [hand]} = deck.divy(1);
             const game_summary = new GameSummary(0, [hand]);
             const strategy = new TheSuggestionWatcher(hand, deck, game_summary);
-            const suggestion = strategy.move();
+            const suggestion = strategy.makeSuggestion();
             equal('ACCUSATION', suggestion.type);
             equal(envelope.getSuspects()[0], suggestion.suspect);
             equal(envelope.getWeapons()[0], suggestion.weapon);
@@ -122,10 +122,10 @@ describe('TheSuggestionWatcher', function () {
             // Since TheSuggestionWatcher knows what cards it has, it can infer
             // that the card shown (to whom? doesn't matter) is the third
             // card in the set.
-            strategy.seeSuggestionAnswered({suggestion: suggestion1, player: 2});
+            strategy.seeSuggestionRefuted({suggestion: suggestion1, player: 2});
             // Now it should have eliminated all possibilities except the right
             // ones
-            const suggestion2 = strategy.move();
+            const suggestion2 = strategy.makeSuggestion();
             equal(
                 accuse(
                     envelope.getSuspects()[0],
@@ -168,13 +168,13 @@ describe('TheSuggestionWatcher', function () {
             // TheSuggestionWatcher does not have enough information to infer
             // anything about this suggestion yet, but it will remember that
             // player 2 refuted it.
-            strategy.seeSuggestionAnswered({suggestion: suggestion1, player: 2});
+            strategy.seeSuggestionRefuted({suggestion: suggestion1, player: 2});
             const card = hand3.getSuspects()[0];
             // Now we'll tell the strategy that player 3 has this card
             strategy.seeCard({card, player: 3});
             // Now it should have eliminated all possibilities except the right
             // ones
-            const suggestion2 = strategy.move();
+            const suggestion2 = strategy.makeSuggestion();
             equal(
                 accuse(
                     envelope.getSuspects()[0],

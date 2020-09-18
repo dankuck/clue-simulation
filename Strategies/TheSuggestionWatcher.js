@@ -50,7 +50,7 @@ class TheSuggestionWatcher extends TheEliminator
         this.checkSavedSuggestions();
     }
 
-    seeSuggestionAnswered({suggestion, player})
+    seeSuggestionRefuted({suggestion, player})
     {
         const solved = this.solveSuggestion({suggestion, player});
         if (! solved) {

@@ -299,7 +299,7 @@ class ClueGame
         const player = this.turnPlayer();
         let suggestion;
         try {
-            suggestion = player.move();
+            suggestion = player.makeSuggestion();
             this.validateSuggestion(suggestion);
         } catch (e) {
             this.losePlayer(player);
@@ -434,14 +434,14 @@ class ClueGame
         const playerId = this.playerId(player);
         const askerId = this.playerId(asker);
         this.showPlayer(asker, 'Card', {suggestion, card, player: playerId});
-        this.showAllPlayers('SuggestionAnswered', {suggestion, player: playerId, asker: askerId}, [player, asker]);
+        this.showAllPlayers('SuggestionRefuted', {suggestion, player: playerId, asker: askerId}, [player, asker]);
     }
 
     showNoCards(player, asker, suggestion)
     {
         const playerId = this.playerId(player);
         const askerId = this.playerId(asker);
-        this.showAllPlayers('SuggestionSkipped', {suggestion, player: playerId, asker: askerId}, [player]);
+        this.showAllPlayers('SuggestionNotRefuted', {suggestion, player: playerId, asker: askerId}, [player]);
     }
 
     showPlayer(player, eventName, data)

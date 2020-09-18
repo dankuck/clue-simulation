@@ -33,7 +33,7 @@ describe('TheEliminator', function () {
             ]);
             const {envelope, hands: [hand]} = deck.divy(1);
             const strategy = new TheEliminator(hand, deck);
-            const suggestion = strategy.move();
+            const suggestion = strategy.makeSuggestion();
 
             notEqual(hand.getSuspects()[0], suggestion.suspect);
             notEqual(hand.getWeapons()[0], suggestion.weapon);
@@ -67,7 +67,7 @@ describe('TheEliminator', function () {
             // make this suggestion.
             // We use this to tell it what card hand2 has.
             strategy.seeCard({suggestion1, card, player: 2});
-            const suggestion2 = strategy.move();
+            const suggestion2 = strategy.makeSuggestion();
             equal(envelope.getSuspects()[0], suggestion2.suspect);
             equal(envelope.getWeapons()[0], suggestion2.weapon);
             equal(envelope.getRooms()[0], suggestion2.room);
@@ -85,7 +85,7 @@ describe('TheEliminator', function () {
             ]);
             const {envelope, hands: [hand]} = deck.divy(1);
             const strategy = new TheEliminator(hand, deck);
-            const suggestion = strategy.move();
+            const suggestion = strategy.makeSuggestion();
             equal('ACCUSATION', suggestion.type);
             equal(envelope.getSuspects()[0], suggestion.suspect);
             equal(envelope.getWeapons()[0], suggestion.weapon);

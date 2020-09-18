@@ -30,13 +30,13 @@ class ExampleStrategy
     /**
      * The only required method.
      *
-     * The move method must return a Suggestion object.
+     * The makeSuggestion method must return a Suggestion object.
      * The suggestion you return will be used to inform your player, and
      * others, whether it can be refuted.
      *
      * Return suggest(suspect, weapon, room) or accuse(suspect, weapon, room)
      */
-    move()
+    makeSuggestion()
     {
         // This strategy is pretty bad, because it randomly chooses to accuse
         // or suggest, and the cards are the first known suspect, weapon, and
@@ -60,7 +60,7 @@ class ExampleStrategy
     /**
      * The game uses seeCard to inform you that a specific player has a
      * specific card. The parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from your own move() call
+     * - suggestion - The Suggestion object returned from your own makeSuggestion() call
      * - card       - One Card that the other player has
      * - player     - The ID of the player who has the card
      */
@@ -78,29 +78,44 @@ class ExampleStrategy
     }
 
     /**
-     * The game uses seeSuggestionAnswered to inform you that a specific player
+     * The game uses seeSuggestionRefuted to inform you that a specific player
      * has shown another player that a specific suggestion is wrong. The
      * parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from `asker`'s move() call
+     * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
      * - player     - The ID of the player who has one of the cards in the
      *                Suggestion
      * - asker      - The ID of the player who created Suggestion; this player
      *                now knows which Card in Suggestion is held by player
      */
-    seeSuggestionAnswered({suggestion, player, asker})
+    seeSuggestionRefuted({suggestion, player, asker})
     {
     }
 
     /**
-     * The game uses seeSuggestionSkipped to inform you that a specific player
+     * The game uses seeSuggestionNotRefuted to inform you that a specific player
      * was unable to refute any of the cards in the Suggestion because they
      * have none of them. The parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from `asker`'s move() call
+     * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
      * - player     - The ID of the player who has none of the cards in the
      *                Suggestion
      * - asker      - The ID of the player who created Suggestion
      */
-    seeSuggestionSkipped({suggestion, player, asker})
+    seeSuggestionNotRefuted({suggestion, player, asker})
+    {
+    }
+
+    /**
+     * The game uses seeSuggestionNeverRefuted to inform all players that a
+     * suggestion could not be refuted by any players. Note: The player who
+     * made the suggestion was never asked, so seeing this event does not
+     * necessarily mean that the suggestion is correct. The asker might have
+     * one or more of the cards!
+     *
+     * The parameter is an object. Here we decompose it.
+     * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
+     * - asker      - The ID of the player who created Suggestion
+     */
+    seeSuggestionNeverRefuted({suggestion, asker})
     {
     }
 }

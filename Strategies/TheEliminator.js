@@ -24,7 +24,7 @@ class TheEliminator
         this.hand.forEach(card => this.eliminate(card));
     }
 
-    move()
+    makeSuggestion()
     {
         if (this.suspects.length === 1 && this.weapons.length === 1 && this.rooms.length === 1) {
             return accuse(

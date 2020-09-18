@@ -201,12 +201,12 @@ describe('Clue', function () {
 
         it('should play with a cheater', function () {
             class Loser {
-                move() {
+                makeSuggestion() {
                     return suggest(/* no actual suggestion */);
                 }
             };
             class Cheater {
-                move() {
+                makeSuggestion() {
                     return accuse(
                         suspect,
                         weapon,
@@ -226,7 +226,7 @@ describe('Clue', function () {
 
         it('should play with no winners', function () {
             class Loser {
-                move() {
+                makeSuggestion() {
                     return {type: 'ACCUSATION', /* no actual accusation */};
                 }
             };
@@ -238,7 +238,7 @@ describe('Clue', function () {
 
         it('should not step if the game is done', function () {
             class Loser {
-                move() {
+                makeSuggestion() {
                     return {type: 'ACCUSATION', /* no actual accusation */};
                 }
             };
@@ -251,7 +251,7 @@ describe('Clue', function () {
 
         it('should make player B show a card to player A', function () {
             class PlayerA {
-                move() {
+                makeSuggestion() {
                     // Colonel Mustard in the Colonel Mustard with the Colonel
                     // Mustard!
                     //
@@ -291,7 +291,7 @@ describe('Clue', function () {
         it('should inform a third player when other players show each other cards', function () {
             class PlayerA
             {
-                move()
+                makeSuggestion()
                 {
                     // On their turn, PlayerA looks at the card PlayerB blabbed
                     // about (below) and suggests it, knowing PlayerB will
@@ -311,7 +311,7 @@ describe('Clue', function () {
             }
             class PlayerC
             {
-                seeSuggestionAnswered(see)
+                seeSuggestionRefuted(see)
                 {
                     // In the end, PlayerC finds out that PlayerB refuted
                     // PlayerA. PlayerC tells everyone what he saw. Now they
@@ -335,7 +335,7 @@ describe('Clue', function () {
         it('should inform other players when a player cannot refute a suggestion', function () {
             class PlayerA
             {
-                move()
+                makeSuggestion()
                 {
                     // PlayerA makes a null suggestion
                     return suggest(null, null, null);
@@ -348,7 +348,7 @@ describe('Clue', function () {
             }
             class PlayerC
             {
-                seeSuggestionSkipped(see)
+                seeSuggestionNotRefuted(see)
                 {
                     // In the end, PlayerC finds out that PlayerB cannot refute
                     // PlayerA. PlayerC tells everyone what he saw. Now they
@@ -371,7 +371,7 @@ describe('Clue', function () {
         it('should cut a player out when they accuse incorrectly', function () {
             class PlayerA
             {
-                move()
+                makeSuggestion()
                 {
                     // PlayerA, trigger-happily accuses null of murder using
                     // null in null.
@@ -380,7 +380,7 @@ describe('Clue', function () {
             }
             class PlayerB
             {
-                move()
+                makeSuggestion()
                 {
                     // PlayerB is wise enough to only *suggest* that null
                     // committed murder using null in null.
@@ -400,7 +400,7 @@ describe('Clue', function () {
 
         it('should let a player choose which card to show', function () {
             class PlayerA {
-                move() {
+                makeSuggestion() {
                     return suggest(
                         peekCards[0],
                         peekCards[1],
@@ -436,10 +436,10 @@ describe('Clue', function () {
             equal(0, sawPlayerId);
         });
 
-        it('should recover from errors thrown from move()', function () {
+        it('should recover from errors thrown from makeSuggestion()', function () {
             class BadSuggestionPlayer {
-                move() {
-                    throw new Error('Should recover from error in move()');
+                makeSuggestion() {
+                    throw new Error('Should recover from error in makeSuggestion()');
                 }
             }
             const game = new ClueGame(Deck.buildStandardDeck(), [BadSuggestionPlayer]);
@@ -453,7 +453,7 @@ describe('Clue', function () {
                     this.hand = hand;
                 }
 
-                move() {
+                makeSuggestion() {
                     const suggestion = suggest(
                         this.hand.get(0),
                         this.hand.get(1),
@@ -475,7 +475,7 @@ describe('Clue', function () {
                     this.hand = hand;
                 }
 
-                move() {
+                makeSuggestion() {
                     return suggest(
                         this.hand.get(0),
                         this.hand.get(1),
@@ -495,7 +495,7 @@ describe('Clue', function () {
                     this.hand = hand;
                 }
 
-                move() {
+                makeSuggestion() {
                     return suggest(
                         this.hand.get(0), // The first card
                         this.hand.get(0), // must be wrong
@@ -515,7 +515,7 @@ describe('Clue', function () {
                     this.hand = hand;
                 }
 
-                move() {
+                makeSuggestion() {
                     const suggestion = suggest(
                         this.deck.getSuspects()[0],
                         this.deck.getWeapons()[0],
