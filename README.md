@@ -165,7 +165,8 @@ class ExampleStrategy
      * one or more of the cards!
      *
      * The parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
+     * - suggestion - The Suggestion object returned from `asker`'s
+     *                makeSuggestion() call
      * - asker      - The ID of the player who created Suggestion
      */
     seeSuggestionNeverRefuted({suggestion, asker})
