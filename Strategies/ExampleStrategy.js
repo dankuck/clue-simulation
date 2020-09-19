@@ -5,7 +5,7 @@ const { suggest, accuse, Card } = require('../Clue.js');
  | ExampleStrategy
  |-------------------------
  | This strategy is about as clever as a small child. Not my child, mind you.
- | But some other person's dumber child.
+ | But some other person's booger-eater child.
  |
  | This strategy only exists to explain to you how to build a strategy class.
  */
@@ -20,6 +20,8 @@ class ExampleStrategy
      * The constructor must accept a Hand, a Deck, and a GameSummary object.
      * The hand contains the cards assigned to this player.
      * The deck contains all the cards in the game.
+     * The game_summary contains the player's own position and the other
+     * players' hand counts.
      * What you do with them is up to you.
      */
     constructor(hand, deck, game_summary)
@@ -59,7 +61,8 @@ class ExampleStrategy
 
     /**
      * The game uses seeCard to inform you that a specific player has a
-     * specific card. The parameter is an object. Here we decompose it.
+     * specific card. This is only sent to the player that created the
+     * Suggestion. The parameter is an object. Here we decompose it.
      * - suggestion - The Suggestion object returned from your own makeSuggestion() call
      * - card       - One Card that the other player has
      * - player     - The ID of the player who has the card
@@ -79,9 +82,11 @@ class ExampleStrategy
 
     /**
      * The game uses seeSuggestionRefuted to inform you that a specific player
-     * has shown another player that a specific suggestion is wrong. The
-     * parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
+     * has shown another player that a specific suggestion is wrong. This is
+     * only sent to users who are not `player` or `asker`. The parameter is an
+     * object. Here we decompose it.
+     * - suggestion - The Suggestion object returned from `asker`'s
+     *                makeSuggestion() call
      * - player     - The ID of the player who has one of the cards in the
      *                Suggestion
      * - asker      - The ID of the player who created Suggestion; this player
@@ -94,7 +99,8 @@ class ExampleStrategy
     /**
      * The game uses seeSuggestionNotRefuted to inform you that a specific player
      * was unable to refute any of the cards in the Suggestion because they
-     * have none of them. The parameter is an object. Here we decompose it.
+     * have none of them. This is only sent to players who are not `player` or
+     * `asker`. The parameter is an object. Here we decompose it.
      * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
      * - player     - The ID of the player who has none of the cards in the
      *                Suggestion
