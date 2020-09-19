@@ -108,7 +108,8 @@ class ExampleStrategy
      * The game uses seeCard to inform you that a specific player has a
      * specific card. This is only sent to the player that created the
      * Suggestion. The parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from your own makeSuggestion() call
+     * - suggestion - The Suggestion object returned from your own
+     *                makeSuggestion() call
      * - card       - One Card that the other player has
      * - player     - The ID of the player who has the card
      */
@@ -146,7 +147,8 @@ class ExampleStrategy
      * was unable to refute any of the cards in the Suggestion because they
      * have none of them. This is only sent to players who are not `player` or
      * `asker`. The parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
+     * - suggestion - The Suggestion object returned from `asker`'s
+     *                makeSuggestion() call
      * - player     - The ID of the player who has none of the cards in the
      *                Suggestion
      * - asker      - The ID of the player who created Suggestion
