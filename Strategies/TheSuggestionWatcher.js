@@ -45,18 +45,15 @@ class TheSuggestionWatcher extends TheEliminator
 
     seeCard({card, player})
     {
-        this.eliminate(card);
+        this.eliminate(card, `was shown to me by ${player}`);
         this.markCardHolder(card, player);
         this.checkSavedSuggestions();
     }
 
     seeSuggestionRefuted({suggestion, player})
     {
-        const solved = this.solveSuggestion({suggestion, player});
-        if (! solved) {
-            // Time to save the suggestion for later
-            this.suggestions.push({suggestion, player});
-        }
+        this.suggestions.unshift({suggestion, player});
+        this.checkSavedSuggestions();
     }
 
     checkSavedSuggestions()
@@ -89,7 +86,7 @@ class TheSuggestionWatcher extends TheEliminator
         const remaining = cards.filter(card => outstanding.includes(card));
         if (remaining.length === 1) {
             // Then we know that must be the card that was shown
-            this.eliminate(remaining[0]);
+            this.eliminate(remaining[0], `was shown to someone by ${player}, I deduced from ${suggestion}`);
             this.markCardHolder(remaining[0], player);
             return true;
         } else {

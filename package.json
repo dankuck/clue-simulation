@@ -6,7 +6,8 @@
   "scripts": {
     "test": "mocha --glob '*.spec.js'",
     "breakdown": "node ./run.js Breakdown",
-    "ab": "node ./run.js HypothesisTester"
+    "ab": "node ./run.js HypothesisTester",
+    "leaderboard": "node ./run.js LeaderBoard"
   },
   "author": "",
   "license": "ISC",

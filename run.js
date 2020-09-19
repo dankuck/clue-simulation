@@ -1,28 +1,18 @@
 const Tournament = require('./Tournament.js');
 const ExampleStrategy = require('./Strategies/ExampleStrategy');
-const TheEliminator = require('./Strategies/TheEliminator');
-const TheLuckyEliminator = require('./Strategies/TheLuckyEliminator');
-const TheSuggestionWatcher = require('./Strategies/TheSuggestionWatcher');
-const TheCageySuggestionWatcher = require('./Strategies/TheCageySuggestionWatcher');
-const TheCageyEliminator = require('./Strategies/TheCageyEliminator');
 const { throttle } = require('lodash');
 const RandomIterator = Tournament.RandomIterator;
 const GameSet = require('./GameSet.js');
 const Breakdown = require('./analytics/Breakdown');
 const HypothesisTester = require('./analytics/HypothesisTester');
+const LeaderBoard = require('./analytics/LeaderBoard');
 
-const strategies = {
-    // ExampleStrategy,
-    TheEliminator,
-    TheCageyEliminator,
-    TheLuckyEliminator,
-    TheSuggestionWatcher,
-    TheCageySuggestionWatcher,
-};
+const strategies = require('./Strategies/allStrategies');
 
 const analyses = {
     Breakdown,
     HypothesisTester,
+    LeaderBoard,
 };
 
 const Analysis = analyses[process.argv[2]];

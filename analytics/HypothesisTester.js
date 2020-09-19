@@ -1,8 +1,11 @@
 const TheEliminator = require('../Strategies/TheEliminator');
 const TheLuckyEliminator = require('../Strategies/TheLuckyEliminator');
+const TheOverConfidentEliminator = require('../Strategies/TheOverConfidentEliminator');
 const TheSuggestionWatcher = require('../Strategies/TheSuggestionWatcher');
 const TheCageySuggestionWatcher = require('../Strategies/TheCageySuggestionWatcher');
 const TheCageyEliminator = require('../Strategies/TheCageyEliminator');
+const TheTrickySuggestionWatcher = require('../Strategies/TheTrickySuggestionWatcher');
+const TheOverConfidentSuggestionWatcher = require('../Strategies/TheOverConfidentSuggestionWatcher');
 
 class HypothesisTester
 {
@@ -22,6 +25,16 @@ class HypothesisTester
             ...this.compareAll(TheSuggestionWatcher, TheEliminator),
             '- - - - - - - - - - - - - - - - - - - - ',
             ...this.compareAll(TheLuckyEliminator, TheEliminator),
+            '- - - - - - - - - - - - - - - - - - - - ',
+            ...this.compareAll(TheOverConfidentEliminator, TheEliminator),
+            '- - - - - - - - - - - - - - - - - - - - ',
+            ...this.compareAll(TheOverConfidentEliminator, TheSuggestionWatcher),
+            '- - - - - - - - - - - - - - - - - - - - ',
+            ...this.compareAll(TheOverConfidentEliminator, TheTrickySuggestionWatcher),
+            '- - - - - - - - - - - - - - - - - - - - ',
+            ...this.compareAll(TheOverConfidentEliminator, TheOverConfidentSuggestionWatcher),
+            '- - - - - - - - - - - - - - - - - - - - ',
+            this.errors(),
             '================================================================',
         ].join("\n");
     }
@@ -35,7 +48,13 @@ class HypothesisTester
 
     advantage(favoredCount, otherCount)
     {
-        return Math.round((favoredCount - otherCount) * 100 / (favoredCount + otherCount)) + '%';
+        const rounded = Math.round((favoredCount - otherCount) * 100 / (favoredCount + otherCount));
+        if (rounded > 99 && favoredCount !== otherCount) {
+            return '>99%';
+        } else if (rounded < 1 && favoredCount !== otherCount) {
+            return '<1%';
+        }
+        return rounded + '%';
     }
 
     compareAll(favoredStrategy, otherStrategy)
@@ -95,6 +114,25 @@ class HypothesisTester
             `  ${favoredWins} : ${otherWins}`,
             `  Advantage : ${this.advantage(favoredWins, otherWins)}`,
         ].join("\n");
+    }
+
+    errors()
+    {
+        const errors = this.results.hasErrors();
+        if (!errors.count()) {
+            return 'Errors: 0';
+        } else {
+            const error = errors.get()[0].game.errors[0];
+            return [
+                'Errors: ' + errors.count(),
+                'First error: ',
+                error.error,
+                error.stack || 'no stack',
+                JSON.stringify(error.asker),
+                JSON.stringify(error.suggestion),
+                JSON.stringify(errors.get()[0].game.envelope),
+            ].join("\n");
+        }
     }
 }
 

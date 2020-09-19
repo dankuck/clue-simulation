@@ -147,6 +147,11 @@ describe('Clue', function () {
             equal('ROOM', suggestion.room);
         });
 
+        it('should convert to string', function () {
+            const suggestion = new Suggestion('TYPE', {name: 'SUSPECT'}, {name: 'WEAPON'}, {name: 'ROOM'});
+            equal('TYPE: SUSPECT with WEAPON in ROOM', suggestion + '');
+        });
+
         it('should provide a suggest() helper', function () {
             const suggestion = suggest('A', 'B', 'C');
             equal(Suggestion.SUGGESTION, suggestion.type);

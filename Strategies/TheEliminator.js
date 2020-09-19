@@ -18,10 +18,12 @@ class TheEliminator
     constructor(hand, deck, game_summary)
     {
         this.hand = hand;
+        this.deck = deck;
         this.suspects = deck.getSuspects();
         this.weapons = deck.getWeapons();
         this.rooms = deck.getRooms();
-        this.hand.forEach(card => this.eliminate(card));
+        this.notes = [];
+        this.hand.forEach(card => this.eliminate(card, 'is in my hand'));
     }
 
     makeSuggestion()
@@ -41,17 +43,23 @@ class TheEliminator
         }
     }
 
-    seeCard({card})
+    seeCard({card, player})
     {
-        this.eliminate(card);
+        this.eliminate(card, `was shown to me by ${player}`);
     }
 
-    eliminate(card)
+    eliminate(card, reason = NO_REASON)
     {
+        if (reason === NO_REASON) {
+            reason = new Error().stack;
+        }
+        this.notes.push(`${card.name} ${reason}`);
         this.suspects = this.suspects.filter(c => c != card);
         this.weapons = this.weapons.filter(c => c != card);
         this.rooms = this.rooms.filter(c => c != card);
     }
 }
+
+const NO_REASON = {};
 
 module.exports = TheEliminator;

@@ -118,23 +118,32 @@ class Query
         );
     }
 
+    hasErrors()
+    {
+        return new Query(
+            () => this.get()
+                .filter(
+                    result => result.game.errors.length > 0
+                )
+        );
+    }
+
     groupBy(groupNamer)
     {
         if (! (groupNamer instanceof Function)) {
             const field = groupNamer;
             groupNamer = result => result[field];
         }
-        const groups = {};
+        const groups = new Map();
         this.get()
             .forEach(result => {
                 const name = groupNamer(result);
-                if (!groups[name]) {
-                    groups[name] = [];
+                if (!groups.has(name)) {
+                    groups.set(name, []);
                 }
-                groups[name].push(result);
+                groups.get(name).push(result);
             });
-        return Object.keys(groups)
-            .sort()
+        return Array.from(groups.keys())
             .map(name => {
                 return {
                     name,

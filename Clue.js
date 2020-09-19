@@ -155,6 +155,11 @@ class Suggestion
         this.weapon = weapon;
         this.room = room;
     }
+
+    toString()
+    {
+        return `${this.type}: ${this.suspect.name} with ${this.weapon.name} in ${this.room.name}`;
+    }
 };
 Suggestion.SUGGESTION = 'SUGGESTION';
 Suggestion.ACCUSATION = 'ACCUSATION';
@@ -457,7 +462,8 @@ class ClueGame
         try {
             player[func](data);
         } catch (e) {
-            console.error(e);
+            this.losePlayer(player);
+            this.addPlayerError(player, e);
         }
     }
 

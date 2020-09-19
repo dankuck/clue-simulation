@@ -133,6 +133,15 @@ describe('GameSet', function () {
             equal(1, set.query().hasTeamSize(X, 2).get().length);
         });
 
+        it('should give games with errors', function () {
+            const set = new GameSet();
+            set.add({game: {errors: []}});
+            set.add({game: {errors: [1, 2]}});
+            set.add({game: {errors: [1]}});
+            set.add({game: {errors: []}});
+            equal(2, set.query().hasErrors().get().length);
+        });
+
         it('should groupBy', function () {
             const set = new GameSet();
             const X = {}, Y = {}, Z = {};
