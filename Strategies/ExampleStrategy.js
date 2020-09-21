@@ -4,8 +4,8 @@ const { suggest, accuse, Card } = require('../Clue.js');
  |-------------------------
  | ExampleStrategy
  |-------------------------
- | This strategy is about as clever as a small child. Not my child, mind you.
- | But some other person's booger-eater child.
+ | This strategy less clever than a small child. Even a pidgin could pick new
+ | cards every time it made a suggestion. This can't even do that.
  |
  | This strategy only exists to explain to you how to build a strategy class.
  */
@@ -98,10 +98,10 @@ class ExampleStrategy
     }
 
     /**
-     * The game uses seeSuggestionNotRefuted to inform you that a specific player
-     * was unable to refute any of the cards in the Suggestion because they
-     * have none of them. This is only sent to players who are not `player` or
-     * `asker`. The parameter is an object. Here we decompose it.
+     * The game uses seeSuggestionNotRefuted to inform you that a specific
+     * player was unable to refute any of the cards in the Suggestion because
+     * they have none of them. This is sent to all players. The parameter is
+     * an object. Here we decompose it.
      * - suggestion - The Suggestion object returned from `asker`'s
      *                makeSuggestion() call
      * - player     - The ID of the player who has none of the cards in the
@@ -120,7 +120,8 @@ class ExampleStrategy
      * one or more of the cards!
      *
      * The parameter is an object. Here we decompose it.
-     * - suggestion - The Suggestion object returned from `asker`'s makeSuggestion() call
+     * - suggestion - The Suggestion object returned from `asker`'s
+     *                makeSuggestion() call
      * - asker      - The ID of the player who created Suggestion
      */
     seeSuggestionNeverRefuted({suggestion, asker})

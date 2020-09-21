@@ -444,7 +444,7 @@ class ClueGame
     {
         const playerId = this.playerId(player);
         const askerId = this.playerId(asker);
-        this.showAllPlayers('SuggestionNotRefuted', {suggestion, player: playerId, asker: askerId}, [player]);
+        this.showAllPlayers('SuggestionNotRefuted', {suggestion, player: playerId, asker: askerId});
     }
 
     showNeverRefuted(asker, suggestion)

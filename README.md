@@ -143,10 +143,10 @@ class ExampleStrategy
     }
 
     /**
-     * The game uses seeSuggestionNotRefuted to inform you that a specific player
-     * was unable to refute any of the cards in the Suggestion because they
-     * have none of them. This is only sent to players who are not `player` or
-     * `asker`. The parameter is an object. Here we decompose it.
+     * The game uses seeSuggestionNotRefuted to inform you that a specific
+     * player was unable to refute any of the cards in the Suggestion because
+     * they have none of them. This is sent to all players. The parameter is
+     * an object. Here we decompose it.
      * - suggestion - The Suggestion object returned from `asker`'s
      *                makeSuggestion() call
      * - player     - The ID of the player who has none of the cards in the
@@ -175,4 +175,5 @@ class ExampleStrategy
 }
 
 module.exports = ExampleStrategy;
+
 ```

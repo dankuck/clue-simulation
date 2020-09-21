@@ -337,7 +337,7 @@ describe('Clue', function () {
             equal(1, saw.player);
         });
 
-        it('should inform other players when a player cannot refute a suggestion', function () {
+        it('should inform all players when a player cannot refute a suggestion', function () {
             class PlayerA
             {
                 makeSuggestion()
@@ -355,22 +355,26 @@ describe('Clue', function () {
             {
                 seeSuggestionNotRefuted(see)
                 {
-                    // In the end, PlayerC finds out that PlayerB cannot refute
-                    // PlayerA. PlayerC tells everyone what he saw. Now they
-                    // all know what C saw.
-                    saw = see;
+                    // PlayerC finds out that PlayerB cannot refute PlayerA.
+                    // PlayerC also finds out that he himself cannot refute
+                    // PlayerA. PlayerC records all that for the assertions
+                    // below.
+                    saw.push(see);
                 }
             }
-            let saw;
+            let saw = [];
             const game = new ClueGame(
                 Deck.buildStandardDeck(),
                 [PlayerA, PlayerB, PlayerC],
                 {validate: false}
             );
             game.step();
-            equal(suggest(null, null, null), saw.suggestion);
-            equal(0, saw.asker);
-            equal(1, saw.player);
+            equal(suggest(null, null, null), saw[0].suggestion);
+            equal(0, saw[0].asker);
+            equal(1, saw[0].player);
+            equal(suggest(null, null, null), saw[1].suggestion);
+            equal(0, saw[1].asker);
+            equal(2, saw[1].player);
         });
 
         it('should inform other players when a suggestion is never refuted', function () {
