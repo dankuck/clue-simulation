@@ -29,6 +29,7 @@ class Counter
         };
 
         this.map = new ArrayMap();
+        this.deck = deck;
 
         Object.keys(this.counts).forEach(location => {
             deck.forEach(card => {
@@ -37,26 +38,105 @@ class Counter
         });
     }
 
-    markCardLocation(card, location)
+    markCardLocation(card, location, correct)
     {
-        this.markCardLocationsFalse(card);
-        this.map.set([card, location], true);
+        this.map.set([card, location], correct);
+        // The key to this tool is that every time we make any change, we check
+        // all of our unknowns to see if any of them can become known.
+        this.resolveUnknowns();
     }
 
-    markCardLocationsFalse(card)
+    resolveUnknowns()
     {
-        this.possibleLocationsFor(card)
-            .forEach(location => this.map.set([card, location], false));
-    }
-
-    markCardLocationFalse(card, location)
-    {
-        this.map.set([card, location], false);
-        const possibleLocations = this.possibleLocationsFor(card);
-        if (possibleLocations.length === 1) {
-            const [correctLocation] = possibleLocations;
-            this.map.set([card, correctLocation], true);
+        let changesWereMade = true;
+        while (changesWereMade) {
+            // We check all the cards that have unknown locations, to see if
+            // our new information reduced the unknowns so that they must add
+            // up a particular way.
+            //
+            // And we check all the locations that have unknown cards, to see
+            // if our new information reduced the unknowns to that they must
+            // add up a particular way.
+            //
+            // If either one makes a change, we loop around again, because that
+            // change may create a wave of updates.
+            //
+            // This is in no particular order, but if the first one makes a
+            // change, we short circuit and loop around again. This reduces
+            // the size of each pass and theoretically reduces the amount of
+            // work being done.
+            changesWereMade = this.resolveUnknownCardLocations()
+                || this.resolveUnknownLocationCards();
         }
+    }
+
+    resolveUnknownCardLocations()
+    {
+        let changesWereMade = false;
+        this.deck.forEach(card => {
+            const yes = [];
+            const no = [];
+            const unknown = [];
+            this.allLocationsFor(card)
+                .forEach(location => {
+                    const value = this.map.get([card, location]);
+                    if (value === true) {
+                        yes.push(location)
+                    } else if (value === false) {
+                        no.push(location);
+                    } else if (value === UNKNOWN) {
+                        unknown.push(location);
+                    }
+                });
+            if (unknown.length > 0) {
+                if (yes.length === 1) {
+                    unknown.forEach(
+                        location => this.map.set([card, location], false)
+                    );
+                    changesWereMade = true;
+                } else if (unknown.length === 1) {
+                    this.map.set([card, unknown[0]], true);
+                    changesWereMade = true;
+                }
+            }
+        });
+        return changesWereMade;
+    }
+
+    resolveUnknownLocationCards()
+    {
+        let changesWereMade = false;
+        Object.keys(this.counts).forEach(location => {
+            const count = this.counts[location];
+            const yes = [];
+            const no = [];
+            const unknown = [];
+            this.allCardsFor(location)
+                .forEach(card => {
+                    const value = this.map.get([card, location]);
+                    if (value === true) {
+                        yes.push(card)
+                    } else if (value === false) {
+                        no.push(card);
+                    } else if (value === UNKNOWN) {
+                        unknown.push(card);
+                    }
+                });
+            if (unknown.length > 0) {
+                if (yes.length === count) {
+                    unknown.forEach(
+                        card => this.map.set([card, location], false)
+                    );
+                    changesWereMade = true;
+                } else if (unknown.length + yes.length === count) {
+                    unknown.forEach(
+                        card => this.map.set([card, location], true)
+                    );
+                    changesWereMade = true;
+                }
+            }
+        });
+        return changesWereMade;
     }
 
     possibleLocationsFor(searchCard)
@@ -64,6 +144,24 @@ class Counter
         return this
             .find(
                 ([card, location, correct]) => searchCard === card && correct !== false
+            )
+            .map(([card, location, correct]) => location);
+    }
+
+    knownLocationsFor(searchCard)
+    {
+        return this
+            .find(
+                ([card, location, correct]) => searchCard === card && correct === true
+            )
+            .map(([card, location, correct]) => location);
+    }
+
+    allLocationsFor(searchCard)
+    {
+        return this
+            .find(
+                ([card, location, correct]) => searchCard === card
             )
             .map(([card, location, correct]) => location);
     }
@@ -84,6 +182,20 @@ class Counter
                 ([card, location, correct]) => searchLocation === location && correct === true
             )
             .map(([card, location, correct]) => card);
+    }
+
+    allCardsFor(searchLocation)
+    {
+        return this
+            .find(
+                ([card, location, correct]) => searchLocation === location
+            )
+            .map(([card, location, correct]) => card);
+    }
+
+    allKnown()
+    {
+        return this.find(([card, location, value]) => value === true);
     }
 
     find(cb)

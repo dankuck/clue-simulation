@@ -52,7 +52,7 @@ class CardSet
 }
 // Here are some array methods that we can just pass through to our internal
 // array to make this class more useful
-['forEach', 'filter', 'map', 'slice'].forEach(funcName => {
+['forEach', 'filter', 'map', 'slice', 'includes'].forEach(funcName => {
     CardSet.prototype[funcName] = function (...params) { return this.cards[funcName](...params) };
 });
 

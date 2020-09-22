@@ -16,6 +16,7 @@ const {
     deepStrictEqual:    equal,
     notDeepStrictEqual: notEqual,
 } = assert;
+const { shuffle } = require('lodash');
 
 const { Counter, ArrayMap } = TheCardCounter;
 
@@ -47,19 +48,20 @@ describe.only('TheCardCounter', function () {
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
             const card = deck.get(0);
-            counter.markCardLocation(card, 0);
-            const cards = counter.possibleCardsFor(0);
-            const otherCards = counter.possibleCardsFor(1);
+            counter.markCardLocation(card, '0', true);
+            const cards = counter.possibleCardsFor('0');
+            const otherCards = counter.possibleCardsFor('1');
             assert(cards.includes(card));
             assert(! otherCards.includes(card));
+            equal(20, otherCards.length);
         });
 
         it('marks a card location as known false', function () {
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
             const card = deck.get(0);
-            counter.markCardLocationFalse(card, 0);
-            const cards = counter.possibleCardsFor(0);
+            counter.markCardLocation(card, '0', false);
+            const cards = counter.possibleCardsFor('0');
             assert(! cards.includes(card));
         });
 
@@ -67,8 +69,8 @@ describe.only('TheCardCounter', function () {
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
             const card = deck.get(0);
-            counter.markCardLocation(card, 0);
-            const knownCards = counter.knownCardsFor(0);
+            counter.markCardLocation(card, '0', true);
+            const knownCards = counter.knownCardsFor('0');
             equal(1, knownCards.length);
             equal(card, knownCards[0]);
         });
@@ -77,24 +79,93 @@ describe.only('TheCardCounter', function () {
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
             const card = deck.get(0);
-            counter.map.log = console.log;
-            counter.markCardLocationFalse(card, '0');
-            counter.markCardLocationFalse(card, '1');
-            counter.markCardLocationFalse(card, '2');
-            counter.markCardLocationFalse(card, '3');
+            counter.markCardLocation(card, '0', false);
+            counter.markCardLocation(card, '1', false);
+            counter.markCardLocation(card, '2', false);
+            counter.markCardLocation(card, '3', false);
             const cards = counter.knownCardsFor('envelope');
             equal(1, cards.length);
             equal(card, cards[0]);
         });
 
-        it.skip('deduces a card location when it learns the location for a different card', function () {
-            // Say we know that Mr. Green is in either player 1's hand or the
+        it('deduces a card location when it learns the location for a different card', function () {
+            // Say we know that Mustard is in either player 1's hand or the
             // envelope.
-            // Say we know that player 1 has four cards.
+            // Say we know that player 1 has five cards.
             // Say we know three of player 1's cards.
-            // If we discover player 1's fourth card is NOT Mr. Green, then we
-            // can deduce that Mr. Green is in the envelope.
+            // If we discover player 1's fifth card is NOT Mustard, then we
+            // can deduce that Mustard is in the envelope.
+            const deck = Deck.buildStandardDeck();
+            const counter = new Counter(deck, [5, 5, 4, 4]);
+            const green = deck.get(0);
+            const fourOtherCards = [
+                deck.get(1),
+                deck.get(2),
+                deck.get(3),
+                deck.get(4),
+            ];
+            const oneMoreCard = deck.get(5);
+            counter.markCardLocation(green, '0', false);
+            counter.markCardLocation(green, '2', false);
+            counter.markCardLocation(green, '3', false);
+            // Now we know green is in either player 1's hand or the envelope
+            fourOtherCards.forEach(
+                card => counter.markCardLocation(card, '1', true)
+            );
+            // Now we know four cards that player 1 has
 
+            // Let's check our understanding that we still can't know whether
+            // the envelope or player 1 has Mustard
+            let onesCards = counter.knownCardsFor('1');
+            let envelopeCards = counter.knownCardsFor('envelope');
+            assert(! onesCards.includes(green));
+            assert(! envelopeCards.includes(green));
+
+            // Now lets learn that player 1's fifth card is something else, not
+            // Mustard
+            counter.markCardLocation(oneMoreCard, '1', true);
+
+            onesCards = counter.knownCardsFor('1');
+            envelopeCards = counter.knownCardsFor('envelope');
+            assert(! onesCards.includes(green));
+            assert(envelopeCards.includes(green));
+        });
+
+        it('never disagrees with a real set of hands', function () {
+            // If the counter ever says no when a hand says yes, or yes when a
+            // hand says no, we've got a problem.
+            const deck = Deck.buildStandardDeck();
+            const {envelope, hands} = deck.divy(4);
+            const cardLocations = [];
+            const facts = {
+                envelope,
+                ...hands,
+            };
+            Object.keys(facts).forEach(location => {
+                const hand = facts[location];
+                hand.forEach(card => cardLocations.push([card, location]));
+            });
+
+            const playerCounts = hands.map(hand => hand.length);
+            const counter = new Counter(deck, playerCounts);
+
+            let lastKnown = counter.allKnown();
+            shuffle(cardLocations).forEach(([card, location]) => {
+                counter.markCardLocation(card, location, true);
+                let known = counter.allKnown();
+                // We expect known to grow by 1, but if it grows by more then
+                // we deduced something!
+                if (known.length > lastKnown.length + 1) {
+                    // Lets check if the facts match our deduction
+                    known.forEach(([card, location]) => {
+                        assert(facts[location], `${location}, ${card.name}`);
+                        assert(facts[location].includes, `${location}, ${card.name}`);
+                        assert(facts[location].includes(card), `${location}, ${card.name}`);
+                    });
+                }
+                lastKnown = known;
+            });
+            equal(21, lastKnown.length);
         });
     });
 
