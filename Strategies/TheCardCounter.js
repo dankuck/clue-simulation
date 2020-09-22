@@ -17,54 +17,92 @@ class TheCardCounter
     }
 }
 
+const UNKNOWN = {};
+
 class Counter
 {
-    constructor(deck, playerCount)
+    constructor(deck, playerCounts)
     {
-        const holders = ['envelope'];
-        for (let i = 0; i < playerCount; i++) {
-            holders.push(i);
-        }
+        this.counts = {
+            envelope: 3,
+            ...playerCounts,
+        };
 
-        this.map = new SetMap();
+        this.map = new ArrayMap();
 
-        deck.forEach(card => {
-            holders.forEach(location => {
-                this.map.set([card, location], null);
+        Object.keys(this.counts).forEach(location => {
+            deck.forEach(card => {
+                this.map.set([card, location], UNKNOWN);
             });
         });
     }
 
     markCardLocation(card, location)
     {
-        for (let [key, value] of this.map.find([card])) {
-            this.map.set(key, false);
-        }
+        this.markCardLocationsFalse(card);
         this.map.set([card, location], true);
     }
 
-    possibleCardsFor(location)
+    markCardLocationsFalse(card)
     {
-        return [...this.map.find([location])]
-            .filter(([key, value]) => {
-                return value !== false;
-            })
-            .map(([key, value]) => {
-                return key[0];
-            });
+        this.possibleLocationsFor(card)
+            .forEach(location => this.map.set([card, location], false));
+    }
+
+    markCardLocationFalse(card, location)
+    {
+        this.map.set([card, location], false);
+        const possibleLocations = this.possibleLocationsFor(card);
+        if (possibleLocations.length === 1) {
+            const [correctLocation] = possibleLocations;
+            this.map.set([card, correctLocation], true);
+        }
+    }
+
+    possibleLocationsFor(searchCard)
+    {
+        return this
+            .find(
+                ([card, location, correct]) => searchCard === card && correct !== false
+            )
+            .map(([card, location, correct]) => location);
+    }
+
+    possibleCardsFor(searchLocation)
+    {
+        return this
+            .find(
+                ([card, location, correct]) => searchLocation === location && correct !== false
+            )
+            .map(([card, location, correct]) => card);
+    }
+
+    knownCardsFor(searchLocation)
+    {
+        return this
+            .find(
+                ([card, location, correct]) => searchLocation === location && correct === true
+            )
+            .map(([card, location, correct]) => card);
+    }
+
+    find(cb)
+    {
+        return [...this.map.entries()]
+            .map(([[card, location], value]) => [card, location, value])
+            .filter(cb);
     }
 }
 
 /**
- * A Map in which a value can be set with a Set as the key, and the same value
- * can be retrieved with a different Set of the same values.
+ * A Map in which a value can be set with an Array as the key, and the same
+ * value can be retrieved with a different Array of the same values in the same
+ * order.
  *
- * Array can be used instead of Set, and it's treated as a Set.
- *
- * It's also able to iterate through entries based on just partial sets as
+ * It's also able to iterate through entries based on just partial arrays as
  * keys.
  */
-class SetMap
+class ArrayMap
 {
     constructor()
     {
@@ -85,7 +123,6 @@ class SetMap
 
     findOrCreateKeyKey(key)
     {
-        key = [...key].sort();
         // Step down through the keyKeys, getting or creating&getting maps
         // along the way.
         return key.reduce(
@@ -94,12 +131,21 @@ class SetMap
         );
     }
 
+    findKeyKey(key)
+    {
+        // Step down through the keyKeys, getting or skipping maps along the
+        // way.
+        return key.reduce(
+            (map, keyPart) => map && map.get(keyPart),
+            this.keyKeys
+        );
+    }
+
     findAndDeleteKeyKey(key)
     {
-        key = [...key].sort();
         // Make a reverse link chain that starts at the end of the chain to
         // the keyKey. Do this by working our way from the top down, and
-        // wrapping each step in the next step as `up`.
+        // wrapping each step in the next step as `up`. Skip any missing data.
         const chain = key.reduce(
             (up, keyPart) => {
                 return {
@@ -138,7 +184,6 @@ class SetMap
 
     set(key, value)
     {
-        key = new Set(key);
         const keyKey = this.findOrCreateKeyKey(key);
         this.valueValues.set(keyKey, [key, value]);
         return this;
@@ -146,7 +191,6 @@ class SetMap
 
     get(key)
     {
-        key = new Set(key);
         const keyKey = this.findOrCreateKeyKey(key);
         const value = this.valueValues.get(keyKey);
         return value && value[1];
@@ -154,14 +198,12 @@ class SetMap
 
     has(key)
     {
-        key = new Set(key);
-        const keyKey = this.findOrCreateKeyKey(key);
+        const keyKey = this.findKeyKey(key);
         return this.valueValues.has(keyKey);
     }
 
     delete(key)
     {
-        key = new Set(key);
         const keyKey = this.findAndDeleteKeyKey(key);
         if (keyKey) {
             return this.valueValues.delete(keyKey);
@@ -174,41 +216,9 @@ class SetMap
     {
         return this.valueValues.values();
     }
-
-    find(key)
-    {
-        const entries = this.entries();
-        return {
-            [Symbol.iterator]() {
-                return this;
-            },
-            next: () => {
-                const next = entries.next();
-                while (!next.done) {
-                    const nextKey = next.value[0];
-                    if (this.keyMatches(key, nextKey)) {
-                        return {done: false, value: next.value};
-                    }
-                }
-                return {done: true};
-            },
-        };
-    }
-
-    keyMatches(test, key)
-    {
-        test = new Set(test);
-        key = new Set(key);
-        for (let element of test) {
-            if (! key.has(element)) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
 
 TheCardCounter.Counter = Counter;
-TheCardCounter.SetMap = SetMap;
+TheCardCounter.ArrayMap = ArrayMap;
 
 module.exports = TheCardCounter;
