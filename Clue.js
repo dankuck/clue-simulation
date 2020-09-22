@@ -158,7 +158,7 @@ class Suggestion
 
     toString()
     {
-        return `${this.type}: ${this.suspect.name} with ${this.weapon.name} in ${this.room.name}`;
+        return `${this.type}: ${this.suspect && this.suspect.name} with ${this.weapon && this.weapon.name} in ${this.room && this.room.name}`;
     }
 };
 Suggestion.SUGGESTION = 'SUGGESTION';
