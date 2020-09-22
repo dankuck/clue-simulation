@@ -16,11 +16,11 @@ const {
     deepStrictEqual:    equal,
     notDeepStrictEqual: notEqual,
 } = assert;
-const { shuffle } = require('lodash');
+const { shuffle, sample } = require('lodash');
 
 const { Counter, ArrayMap } = TheCardCounter;
 
-describe.only('TheCardCounter', function () {
+describe('TheCardCounter', function () {
 
     // testStrategy(TheCardCounter);
 
@@ -149,22 +149,39 @@ describe.only('TheCardCounter', function () {
             const playerCounts = hands.map(hand => hand.length);
             const counter = new Counter(deck, playerCounts);
 
+            // We'll randomly send known-correct card location facts to the
+            // counter and any time it makes its own deduction, we'll check
+            // if it's still correct.
             let lastKnown = counter.allKnown();
-            shuffle(cardLocations).forEach(([card, location]) => {
-                counter.markCardLocation(card, location, true);
+            const learn = ([card, location], yesToNoRatio) => {
+                if (Math.random() < yesToNoRatio) {
+                    counter.markCardLocation(card, location, true);
+                } else {
+                    // Get a random location that is NOT this one, so we can
+                    // say we found out that's not the location
+                    const notLocation = sample(
+                        Object.keys(facts)
+                            .filter(key => key !== location)
+                    );
+                    counter.markCardLocation(card, notLocation, false);
+                }
                 let known = counter.allKnown();
                 // We expect known to grow by 1, but if it grows by more then
                 // we deduced something!
                 if (known.length > lastKnown.length + 1) {
                     // Lets check if the facts match our deduction
                     known.forEach(([card, location]) => {
-                        assert(facts[location], `${location}, ${card.name}`);
-                        assert(facts[location].includes, `${location}, ${card.name}`);
                         assert(facts[location].includes(card), `${location}, ${card.name}`);
                     });
                 }
                 lastKnown = known;
-            });
+            };
+
+            // do some with yes's and no's
+            shuffle(cardLocations).forEach(cardLocation => learn(cardLocation, .75));
+
+            // do all of the rest with yes, so we can count the results
+            shuffle(cardLocations).forEach(cardLocation => learn(cardLocation, 1));
             equal(21, lastKnown.length);
         });
     });
