@@ -31,7 +31,7 @@ describe.only('TheCardCounter', function () {
             const {hands} = deck.divy(4);
             const game_summary = new GameSummary(0, hands);
             new TheCardCounter(
-                hands[0],
+                new Hand([]),
                 deck,
                 game_summary
             );
@@ -42,7 +42,7 @@ describe.only('TheCardCounter', function () {
             const {hands} = deck.divy(4);
             const game_summary = new GameSummary(0, hands);
             const counter = new TheCardCounter(
-                hands[0],
+                new Hand([]),
                 deck,
                 game_summary
             );
@@ -60,7 +60,7 @@ describe.only('TheCardCounter', function () {
             const {hands} = deck.divy(4);
             const game_summary = new GameSummary(0, hands);
             const counter = new TheCardCounter(
-                hands[0],
+                new Hand([]),
                 deck,
                 game_summary
             );
@@ -80,6 +80,21 @@ describe.only('TheCardCounter', function () {
                 seeSuggestion.room,
             );
             equal(expectAccusation, suggestion);
+        });
+
+        it('knows where its own cards are', function () {
+            const deck = Deck.buildStandardDeck();
+            const {hands} = deck.divy(4);
+            const game_summary = new GameSummary(0, hands);
+            const suspects = deck.getSuspects();
+            const accused = suspects.pop();
+            const counter = new TheCardCounter(
+                new Hand(suspects),
+                deck,
+                game_summary
+            );
+            const suggestion = counter.makeSuggestion();
+            equal(accused, suggestion.suspect);
         });
 
     });
@@ -124,10 +139,12 @@ describe.only('TheCardCounter', function () {
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
             const card = deck.get(0);
-            counter.markCardLocation(card, '0', false);
-            counter.markCardLocation(card, '1', false);
-            counter.markCardLocation(card, '2', false);
-            counter.markCardLocation(card, '3', false);
+            counter.markCardLocations([
+                [card, '0', false],
+                [card, '1', false],
+                [card, '2', false],
+                [card, '3', false],
+            ]);
             const cards = counter.trueCardsFor('envelope');
             equal(1, cards.length);
             equal(card, cards[0]);

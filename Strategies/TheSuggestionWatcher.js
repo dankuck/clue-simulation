@@ -47,16 +47,16 @@ class TheSuggestionWatcher extends TheEliminator
     {
         this.eliminate(card, `was shown to me by ${player}`);
         this.markCardHolder(card, player);
-        this.checkSavedSuggestions();
+        this.solveSavedSuggestions();
     }
 
     seeSuggestionRefuted({suggestion, player})
     {
         this.suggestions.unshift({suggestion, player});
-        this.checkSavedSuggestions();
+        this.solveSavedSuggestions();
     }
 
-    checkSavedSuggestions()
+    solveSavedSuggestions()
     {
         let before, after;
         do {

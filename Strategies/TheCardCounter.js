@@ -17,6 +17,12 @@ class TheCardCounter
         this.deck = deck;
         this.game_summary = game_summary;
         this.counter = new Counter(deck, game_summary.hands.map(hand => hand.length));
+        this.suggestions = [];
+        this.counter.markCardLocations(
+            this.hand.map(
+                card => [card, game_summary.position.toString(), true]
+            )
+        );
     }
 
     makeSuggestion()
@@ -44,10 +50,18 @@ class TheCardCounter
 
     seeSuggestionNotRefuted({suggestion, player})
     {
-        this.counter.markCardLocation(suggestion.suspect, player.toString(), false);
-        this.counter.markCardLocation(suggestion.weapon, player.toString(), false);
-        this.counter.markCardLocation(suggestion.room, player.toString(), false);
+        this.counter.markCardLocations([
+            [suggestion.suspect, player.toString(), false],
+            [suggestion.weapon, player.toString(), false],
+            [suggestion.room, player.toString(), false],
+        ]);
     }
+
+    // seeSuggestionRefuted({suggestion, player})
+    // {
+    //     this.suggestions.unshift({suggestion, player});
+    //     this.
+    // }
 }
 
 const UNKNOWN = {};
@@ -71,12 +85,21 @@ class Counter
         });
     }
 
-    markCardLocation(card, location, correct)
+    markCardLocation(...params)
     {
-        if (![true, false].includes(correct)) {
-            throw new TypeError('Bad value sent to markCardLocation');
-        }
-        this.map.set([card, location], correct);
+        this.markCardLocations([params]);
+    }
+
+    markCardLocations(many)
+    {
+        many.forEach(([card, location, correct]) => {
+            if (![true, false].includes(correct)) {
+                throw new TypeError('Bad value sent to markCardLocation');
+            }
+        });
+        many.forEach(([card, location, correct]) => {
+            this.map.set([card, location], correct);
+        });
         // The key to this tool is that every time we make any change, we check
         // all of our unknowns to see if any of them can become known.
         this.resolveUnknowns();
