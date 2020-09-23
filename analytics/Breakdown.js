@@ -150,7 +150,7 @@ class Breakdown
 
     /**
      * For each strategy that this strategy is in a game with, where either this
-     * strategy of the other one was a winner, what was this strategy's proportion
+     * strategy or the other one was a winner, what was this strategy's proportion
      * of wins?
      */
     buildGrudgeComparisons(name, strategy, plays)

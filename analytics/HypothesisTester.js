@@ -6,6 +6,8 @@ const TheCageySuggestionWatcher = require('../Strategies/TheCageySuggestionWatch
 const TheCageyEliminator = require('../Strategies/TheCageyEliminator');
 const TheTrickySuggestionWatcher = require('../Strategies/TheTrickySuggestionWatcher');
 const TheOverConfidentSuggestionWatcher = require('../Strategies/TheOverConfidentSuggestionWatcher');
+const TheCardCounter = require('../Strategies/TheCardCounter');
+const TheSuggestionWatcherCardCounter = require('../Strategies/TheSuggestionWatcherCardCounter');
 
 class HypothesisTester
 {
@@ -34,6 +36,10 @@ class HypothesisTester
             '- - - - - - - - - - - - - - - - - - - - ',
             ...this.compareAll(TheOverConfidentEliminator, TheOverConfidentSuggestionWatcher),
             '- - - - - - - - - - - - - - - - - - - - ',
+            ...this.compareAll(TheCardCounter, TheOverConfidentSuggestionWatcher),
+            '- - - - - - - - - - - - - - - - - - - - ',
+            ...this.compareAll(TheSuggestionWatcherCardCounter, TheCardCounter),
+            '- - - - - - - - - - - - - - - - - - - - ',
             this.errors(),
             '================================================================',
         ].join("\n");
@@ -49,10 +55,11 @@ class HypothesisTester
     advantage(favoredCount, otherCount)
     {
         const rounded = Math.round((favoredCount - otherCount) * 100 / (favoredCount + otherCount));
-        if (rounded > 99 && favoredCount !== otherCount) {
-            return '>99%';
-        } else if (rounded < 1 && favoredCount !== otherCount) {
-            return '<1%';
+        const abs = Math.abs(rounded);
+        if (abs > 99 && favoredCount !== otherCount) {
+            return `~${rounded}%`;
+        } else if (abs < 1 && favoredCount !== otherCount) {
+            return '~0%';
         }
         return rounded + '%';
     }

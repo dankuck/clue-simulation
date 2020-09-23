@@ -6,8 +6,14 @@ const { sample } = require('lodash');
  | TheCardCounter
  |---------------------
  | This strategy is capable of deducing what cards a player or the envelope
- | holds by watching what cards it is shown and what players cannot show cards.
+ | holds by watching what cards it is shown and which players cannot show
+ | cards.
  |
+ | This first version does not try to figure out what card is shown when
+ | other players show each other cards, like in TheSuggestionWatcher. That's
+ | left out so that we can compare to a version where we add it.
+ |
+ | Even without that, it is the best strategy at the time of its writing.
  */
 class TheCardCounter
 {
@@ -17,7 +23,6 @@ class TheCardCounter
         this.deck = deck;
         this.game_summary = game_summary;
         this.counter = new Counter(deck, game_summary.hands.map(hand => hand.length));
-        this.suggestions = [];
         this.counter.markCardLocations(
             this.hand.map(
                 card => [card, game_summary.position.toString(), true]
@@ -25,9 +30,17 @@ class TheCardCounter
         );
     }
 
+    /**
+     * All the cards that might be in the envelope, in a Hand
+     */
+    getEnvelope()
+    {
+        return new Hand(this.counter.possibleCardsFor('envelope'));
+    }
+
     makeSuggestion()
     {
-        const envelope = new Hand(this.counter.possibleCardsFor('envelope'));
+        const envelope = this.getEnvelope();
         if (envelope.count() === 3) {
             return accuse(
                 envelope.getSuspects()[0],
@@ -56,12 +69,6 @@ class TheCardCounter
             [suggestion.room, player.toString(), false],
         ]);
     }
-
-    // seeSuggestionRefuted({suggestion, player})
-    // {
-    //     this.suggestions.unshift({suggestion, player});
-    //     this.
-    // }
 }
 
 const UNKNOWN = {};
@@ -83,6 +90,16 @@ class Counter
                 this.map.set([card, location], UNKNOWN);
             });
         });
+    }
+
+    cardIsInLocation(card, location)
+    {
+        return this.map.get([card, location]) === true;
+    }
+
+    cardIsNotInLocation(card, location)
+    {
+        return this.map.get([card, location]) === false;
     }
 
     markCardLocation(...params)

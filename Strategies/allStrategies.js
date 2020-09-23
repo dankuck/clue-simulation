@@ -6,6 +6,8 @@ const TheCageySuggestionWatcher = require('./TheCageySuggestionWatcher');
 const TheTrickySuggestionWatcher = require('./TheTrickySuggestionWatcher');
 const TheCageyEliminator = require('./TheCageyEliminator');
 const TheOverConfidentSuggestionWatcher = require('./TheOverConfidentSuggestionWatcher');
+const TheCardCounter = require('./TheCardCounter');
+const TheSuggestionWatcherCardCounter = require('./TheSuggestionWatcherCardCounter');
 
 module.exports = {
     TheEliminator,
@@ -17,4 +19,7 @@ module.exports = {
     TheCageySuggestionWatcher,
     TheTrickySuggestionWatcher,
     TheOverConfidentSuggestionWatcher,
+
+    TheCardCounter,
+    TheSuggestionWatcherCardCounter,
 };
