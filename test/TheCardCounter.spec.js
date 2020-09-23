@@ -20,9 +20,9 @@ const { shuffle, sample } = require('lodash');
 
 const { Counter, ArrayMap } = TheCardCounter;
 
-describe('TheCardCounter', function () {
+describe.only('TheCardCounter', function () {
 
-    // testStrategy(TheCardCounter);
+    testStrategy(TheCardCounter);
 
     describe('strategy', function () {
 
@@ -35,6 +35,51 @@ describe('TheCardCounter', function () {
                 deck,
                 game_summary
             );
+        });
+
+        it('sees enough cards to figure out the suspect', function () {
+            const deck = Deck.buildStandardDeck();
+            const {hands} = deck.divy(4);
+            const game_summary = new GameSummary(0, hands);
+            const counter = new TheCardCounter(
+                hands[0],
+                deck,
+                game_summary
+            );
+            const suspects = deck.getSuspects();
+            const accused = suspects.pop();
+            suspects.forEach(card => {
+                counter.seeCard({card, player: 1});
+            });
+            const suggestion = counter.makeSuggestion();
+            equal(accused, suggestion.suspect);
+        });
+
+        it('sees cards not being refuted', function () {
+            const deck = Deck.buildStandardDeck();
+            const {hands} = deck.divy(4);
+            const game_summary = new GameSummary(0, hands);
+            const counter = new TheCardCounter(
+                hands[0],
+                deck,
+                game_summary
+            );
+            const seeSuggestion = suggest(
+                deck.getSuspects()[0],
+                deck.getWeapons()[0],
+                deck.getRooms()[0]
+            );
+            counter.seeSuggestionNotRefuted({suggestion: seeSuggestion, player: 0});
+            counter.seeSuggestionNotRefuted({suggestion: seeSuggestion, player: 1});
+            counter.seeSuggestionNotRefuted({suggestion: seeSuggestion, player: 2});
+            counter.seeSuggestionNotRefuted({suggestion: seeSuggestion, player: 3});
+            const suggestion = counter.makeSuggestion();
+            const expectAccusation = accuse(
+                seeSuggestion.suspect,
+                seeSuggestion.weapon,
+                seeSuggestion.room,
+            );
+            equal(expectAccusation, suggestion);
         });
 
     });
@@ -70,7 +115,7 @@ describe('TheCardCounter', function () {
             const counter = new Counter(deck, [5, 5, 4, 4]);
             const card = deck.get(0);
             counter.markCardLocation(card, '0', true);
-            const knownCards = counter.knownCardsFor('0');
+            const knownCards = counter.trueCardsFor('0');
             equal(1, knownCards.length);
             equal(card, knownCards[0]);
         });
@@ -83,9 +128,28 @@ describe('TheCardCounter', function () {
             counter.markCardLocation(card, '1', false);
             counter.markCardLocation(card, '2', false);
             counter.markCardLocation(card, '3', false);
-            const cards = counter.knownCardsFor('envelope');
+            const cards = counter.trueCardsFor('envelope');
             equal(1, cards.length);
             equal(card, cards[0]);
+        });
+
+        it('throws a TypeError if a wrong value or no value is sent to markCardLocation', function () {
+            const deck = Deck.buildStandardDeck();
+            const counter = new Counter(deck, [5, 5, 4, 4]);
+            const card = deck.get(0);
+            const assertTypeError = cb => {
+                try {
+                    cb();
+                } catch (e) {
+                    assert(e instanceof TypeError);
+                    return;
+                }
+                assert(false, 'No error thrown');
+            };
+            assertTypeError(() => counter.markCardLocation(card, '0'));
+            assertTypeError(() => counter.markCardLocation(card, '0', null));
+            assertTypeError(() => counter.markCardLocation(card, '0', {}));
+            assertTypeError(() => counter.markCardLocation(card, '0', []));
         });
 
         it('deduces a card location when it learns the location for a different card', function () {
@@ -116,8 +180,8 @@ describe('TheCardCounter', function () {
 
             // Let's check our understanding that we still can't know whether
             // the envelope or player 1 has Mustard
-            let onesCards = counter.knownCardsFor('1');
-            let envelopeCards = counter.knownCardsFor('envelope');
+            let onesCards = counter.trueCardsFor('1');
+            let envelopeCards = counter.trueCardsFor('envelope');
             assert(! onesCards.includes(green));
             assert(! envelopeCards.includes(green));
 
@@ -125,10 +189,30 @@ describe('TheCardCounter', function () {
             // Mustard
             counter.markCardLocation(oneMoreCard, '1', true);
 
-            onesCards = counter.knownCardsFor('1');
-            envelopeCards = counter.knownCardsFor('envelope');
+            onesCards = counter.trueCardsFor('1');
+            envelopeCards = counter.trueCardsFor('envelope');
             assert(! onesCards.includes(green));
             assert(envelopeCards.includes(green));
+        });
+
+        it('deduces a card is in the envelope when it knows the location of all other cards of a type', function () {
+            // Say we know that five specific suspects are in the hands of
+            // specific players.
+            // We can deduce that the sixth suspect is in the envelope.
+            // This only works for the envelope because it has exactly 1 of
+            // each type.
+            const deck = Deck.buildStandardDeck();
+            const counter = new Counter(deck, [5, 5, 4, 4]);
+            const suspects = deck.getSuspects();
+            const murderer = suspects.pop();
+            suspects.forEach(card => {
+                counter.markCardLocation(card, '0', true);
+            });
+            // Now we know where five suspects are. Lets see if the counter
+            // deduced that the sixth suspect is in the envelope.
+
+            const envelopeCards = counter.trueCardsFor('envelope');
+            assert(envelopeCards.includes(murderer));
         });
 
         it('never disagrees with a real set of hands', function () {
@@ -152,7 +236,7 @@ describe('TheCardCounter', function () {
             // We'll randomly send known-correct card location facts to the
             // counter and any time it makes its own deduction, we'll check
             // if it's still correct.
-            let lastKnown = counter.allKnown();
+            let lastKnown = counter.allTrue();
             const learn = ([card, location], yesToNoRatio) => {
                 if (Math.random() < yesToNoRatio) {
                     counter.markCardLocation(card, location, true);
@@ -165,7 +249,7 @@ describe('TheCardCounter', function () {
                     );
                     counter.markCardLocation(card, notLocation, false);
                 }
-                let known = counter.allKnown();
+                let known = counter.allTrue();
                 // We expect known to grow by 1, but if it grows by more then
                 // we deduced something!
                 if (known.length > lastKnown.length + 1) {

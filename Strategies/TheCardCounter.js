@@ -1,10 +1,12 @@
-const { suggest, accuse, Card } = require('../Clue.js');
+const { suggest, accuse, Card, Hand } = require('../Clue.js');
 const { sample } = require('lodash');
 
 /**
  |---------------------
  | TheCardCounter
  |---------------------
+ | This strategy is capable of deducing what cards a player or the envelope
+ | holds by watching what cards it is shown and what players cannot show cards.
  |
  */
 class TheCardCounter
@@ -14,6 +16,37 @@ class TheCardCounter
         this.hand = hand;
         this.deck = deck;
         this.game_summary = game_summary;
+        this.counter = new Counter(deck, game_summary.hands.map(hand => hand.length));
+    }
+
+    makeSuggestion()
+    {
+        const envelope = new Hand(this.counter.possibleCardsFor('envelope'));
+        if (envelope.count() === 3) {
+            return accuse(
+                envelope.getSuspects()[0],
+                envelope.getWeapons()[0],
+                envelope.getRooms()[0]
+            );
+        } else {
+            return suggest(
+                sample(envelope.getSuspects()),
+                sample(envelope.getWeapons()),
+                sample(envelope.getRooms())
+            );
+        }
+    }
+
+    seeCard({suggestion, card, player})
+    {
+        this.counter.markCardLocation(card, player.toString(), true);
+    }
+
+    seeSuggestionNotRefuted({suggestion, player})
+    {
+        this.counter.markCardLocation(suggestion.suspect, player.toString(), false);
+        this.counter.markCardLocation(suggestion.weapon, player.toString(), false);
+        this.counter.markCardLocation(suggestion.room, player.toString(), false);
     }
 }
 
@@ -40,6 +73,9 @@ class Counter
 
     markCardLocation(card, location, correct)
     {
+        if (![true, false].includes(correct)) {
+            throw new TypeError('Bad value sent to markCardLocation');
+        }
         this.map.set([card, location], correct);
         // The key to this tool is that every time we make any change, we check
         // all of our unknowns to see if any of them can become known.
@@ -58,15 +94,20 @@ class Counter
             // if our new information reduced the unknowns to that they must
             // add up a particular way.
             //
-            // If either one makes a change, we loop around again, because that
-            // change may create a wave of updates.
+            // And finally we check whether the envelope only has one of any
+            // particular card type possible. Since it can only have one of a
+            // type, we know that's the answer.
             //
-            // This is in no particular order, but if the first one makes a
-            // change, we short circuit and loop around again. This reduces
-            // the size of each pass and theoretically reduces the amount of
-            // work being done.
+            // If any method makes a change, we loop around again, because that
+            // change may create a cascade of updates.
+            //
+            // This is in no particular order, but if one of the early ones
+            // makes a change, we short circuit and loop around again. This
+            // reduces the size of each pass and theoretically reduces the
+            // amount of work being done.
             changesWereMade = this.resolveUnknownCardLocations()
-                || this.resolveUnknownLocationCards();
+                || this.resolveUnknownLocationCards()
+                || this.resolveUnknownEnvelopeCardsByType();
         }
     }
 
@@ -139,70 +180,76 @@ class Counter
         return changesWereMade;
     }
 
-    possibleLocationsFor(searchCard)
+    resolveUnknownEnvelopeCardsByType()
     {
-        return this
-            .find(
-                ([card, location, correct]) => searchCard === card && correct !== false
-            )
-            .map(([card, location, correct]) => location);
+        let changesWereMade = false;
+        const cards = this.possibleCardsFor('envelope');
+        const typeGroups = [
+            cards.filter(card => card.type === Card.SUSPECT),
+            cards.filter(card => card.type === Card.WEAPON),
+            cards.filter(card => card.type === Card.ROOM),
+        ];
+        typeGroups.forEach(typeGroup => {
+
+            if (typeGroup.length === 1) {
+                const card = typeGroup[0];
+                if (this.map.get([card, 'envelope']) === UNKNOWN) {
+                    this.map.set([card, 'envelope'], true);
+                    changesWereMade = true;
+                }
+            }
+        });
+        return changesWereMade;
     }
 
-    knownLocationsFor(searchCard)
+    possibleLocationsFor(card)
     {
-        return this
-            .find(
-                ([card, location, correct]) => searchCard === card && correct === true
-            )
-            .map(([card, location, correct]) => location);
+        return this.mapKeysIncluding(card, [true, UNKNOWN])
+            .map(([card, location]) => location);
     }
 
-    allLocationsFor(searchCard)
+    trueLocationsFor(card)
     {
-        return this
-            .find(
-                ([card, location, correct]) => searchCard === card
-            )
-            .map(([card, location, correct]) => location);
+        return this.mapKeysIncluding(card, [true])
+            .map(([card, location]) => location);
     }
 
-    possibleCardsFor(searchLocation)
+    allLocationsFor(card)
     {
-        return this
-            .find(
-                ([card, location, correct]) => searchLocation === location && correct !== false
-            )
-            .map(([card, location, correct]) => card);
+        return this.mapKeysIncluding(card, [true, UNKNOWN, false])
+            .map(([card, location]) => location);
     }
 
-    knownCardsFor(searchLocation)
+    possibleCardsFor(location)
     {
-        return this
-            .find(
-                ([card, location, correct]) => searchLocation === location && correct === true
-            )
-            .map(([card, location, correct]) => card);
+        return this.mapKeysIncluding(location, [true, UNKNOWN])
+            .map(([card, location]) => card);
     }
 
-    allCardsFor(searchLocation)
+    trueCardsFor(location)
     {
-        return this
-            .find(
-                ([card, location, correct]) => searchLocation === location
-            )
-            .map(([card, location, correct]) => card);
+        return this.mapKeysIncluding(location, [true])
+            .map(([card, location]) => card);
     }
 
-    allKnown()
+    allCardsFor(location)
     {
-        return this.find(([card, location, value]) => value === true);
+        return this.mapKeysIncluding(location, [true, UNKNOWN, false])
+            .map(([card, location]) => card);
     }
 
-    find(cb)
+    allTrue()
     {
         return [...this.map.entries()]
-            .map(([[card, location], value]) => [card, location, value])
-            .filter(cb);
+            .filter(([key, value]) => value === true)
+            .map(([key, value]) => key);
+    }
+
+    mapKeysIncluding(keyPart, values)
+    {
+        return [...this.map.entries()]
+            .filter(([key, value]) => key.includes(keyPart) && values.includes(value))
+            .map(([key, value]) => key);
     }
 }
 
@@ -238,7 +285,7 @@ class ArrayMap
         // Step down through the keyKeys, getting or creating&getting maps
         // along the way.
         return key.reduce(
-            (map, keyPart) => map.get(keyPart) || (map.set(keyPart, new Map()) && map.get(keyPart)),
+            (map, keyPart) => map.get(keyPart) || (map.set(keyPart, new Map()), map.get(keyPart)),
             this.keyKeys
         );
     }

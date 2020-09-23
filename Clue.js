@@ -49,6 +49,11 @@ class CardSet
     {
         return this.filterType(Card.ROOM);
     }
+
+    count()
+    {
+        return this.cards.length;
+    }
 }
 // Here are some array methods that we can just pass through to our internal
 // array to make this class more useful
