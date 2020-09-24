@@ -214,7 +214,7 @@ describe('TheCardCounter', function () {
             // Say we know that five specific suspects are in the hands of
             // specific players.
             // We can deduce that the sixth suspect is in the envelope.
-            // This works for the envelope because it has exactly 1 of
+            // This only works for the envelope because it has exactly 1 of
             // each type.
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
@@ -284,35 +284,113 @@ describe('TheCardCounter', function () {
             equal(21, lastKnown.length);
         });
 
+        it('deduces when we expect it to', function () {
+            // In this test, we used a deterministic method to divy out the
+            // cards, and now we have the counter solve the whole thing.
+            //
+            // If the Counter continues to operate correctly, it should know
+            // X things after we tell it Y true's and false's, regardless of
+            // its inner workings.
+
+            const deck = Deck.buildStandardDeck();
+
+            // The following card locations were chosen by a call to shuffle
+            // and now they are set in stone, so all versions of Counter have
+            // to deal with the same data.
+            //
+            // Columns are:
+            //  0: the nth card in the ordered deck
+            //  1: the nth player hand
+            //  2: whether the card is really there
+            //  3: how many cards should be known after learning this row
+            const facts = [
+                [ 7  , 2 , true  , 1  ],
+                [ 3  , 3 , true  , 2  ],
+                [ 3  , 3 , true  , 2  ], // repeated
+                [ 15 , 0 , true  , 3  ],
+                [ 11 , 1 , false , 3  ],
+                [ 19 , 0 , true  , 4  ],
+                [ 5  , 1 , true  , 5  ],
+                [ 1  , 3 , false , 5  ], // several rows that only tell false
+                [ 14 , 2 , false , 5  ],
+                [ 20 , 4 , false , 5  ],
+                [ 20 , 4 , false , 5  ],
+                [ 6  , 0 , true  , 6  ],
+                [ 17 , 0 , true  , 7  ],
+                [ 12 , 3 , true  , 8  ],
+                [ 8  , 0 , false , 8  ],
+                [ 13 , 3 , true  , 9  ],
+                [ 18 , 0 , false , 9  ],
+                [ 10 , 1 , true  , 10 ],
+                [ 4  , 0 , false , 10 ], // no new trues
+                [ 0  , 2 , true  , 11 ],
+                [ 2  , 1 , true  , 12 ],
+                [ 16 , 2 , true  , 13 ],
+                [ 9  , 1 , true  , 14 ],
+                [ 11 , 0 , true  , 16 ], // something was deduced
+                [ 1  , 2 , true  , 18 ], // another deduction
+                [ 14 , 1 , true  , 19 ],
+                [ 20 , 3 , true  , 21 ], // whole game solved
+            ].map(
+                ([i, location, correct, expectedKnown]) =>
+                    [deck.get(i), location.toString(), correct, expectedKnown]
+            );
+
+            const playerCounts = [5, 5, 4, 4];
+            const counter = new Counter(deck, playerCounts);
+
+            const known = facts
+                .map(
+                    ([card, location, correct, expectedKnown]) => {
+                        counter.markCardLocation(card, location, correct);
+                        const known = counter.allTrue().length;
+                        return [card, location, correct, known];
+                    }
+                );
+
+            equal(facts, known);
+        });
+
         it('has low complexity / high speed', function () {
-            // We'll skip this test most of the time. In this, we used a
-            // deterministic method to divy out the cards, and now we have the
-            // counter solve the whole thing.
+            // In this test, we used a deterministic method to divy out the
+            // cards, and now we have the counter solve the whole thing.
             //
-            // At the end we ask it how many rounds it required to solve.
+            // At the end we ask it how many rounds it required to solve. This
+            // is called its complexityScore.
             //
-            // Then a developer tries to change Counter so the score drops.
+            // When changes to Counter cause the complexityScore to change,
+            // (hopefully to drop) a developer will be told.
             //
-            // When running this test, it's smart to set it to ` and also
-            // set the above test to `:
-            // 'never disagrees with a real set of hands'
+            // So if you're a developer hoping to speed up the Counter, this
+            // can help you get there.
+
             const deck = Deck.buildStandardDeck();
 
             // The following card locations were chosen by a call to shuffle
             // and now they are set in stone, so all versions of Counter have
             // to deal with the same data.
             const facts = [
-                [ 7, 2 ],           [ 3, 3 ],
-                [ 15, 0 ],          [ 11, 0 ],
-                [ 19, 0 ],          [ 5, 1 ],
-                [ 1, 2 ],           [ 14, 1 ],
-                [ 20, 3 ],          [ 6, 0 ],
-                [ 17, 0 ],          [ 12, 3 ],
-                [ 8, 'envelope' ],  [ 13, 3 ],
-                [ 18, 'envelope' ], [ 10, 1 ],
-                [ 4, 'envelope' ],  [ 0, 2 ],
-                [ 2, 1 ],           [ 16, 2 ],
-                [ 9, 1 ],
+                [ 7  , 2          ],
+                [ 3  , 3          ],
+                [ 15 , 0          ],
+                [ 11 , 0          ],
+                [ 19 , 0          ],
+                [ 5  , 1          ],
+                [ 1  , 2          ],
+                [ 14 , 1          ],
+                [ 20 , 3          ],
+                [ 6  , 0          ],
+                [ 17 , 0          ],
+                [ 12 , 3          ],
+                [ 8  , 'envelope' ],
+                [ 13 , 3          ],
+                [ 18 , 'envelope' ],
+                [ 10 , 1          ],
+                [ 4  , 'envelope' ],
+                [ 0  , 2          ],
+                [ 2  , 1          ],
+                [ 16 , 2          ],
+                [ 9  , 1          ],
             ].map(([i, location]) => [deck.get(i), location.toString()]);
 
             const playerCounts = [5, 5, 4, 4];
