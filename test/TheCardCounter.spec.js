@@ -214,7 +214,7 @@ describe('TheCardCounter', function () {
             // Say we know that five specific suspects are in the hands of
             // specific players.
             // We can deduce that the sixth suspect is in the envelope.
-            // This only works for the envelope because it has exactly 1 of
+            // This works for the envelope because it has exactly 1 of
             // each type.
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
@@ -284,7 +284,7 @@ describe('TheCardCounter', function () {
             equal(21, lastKnown.length);
         });
 
-        it.skip('has low complexity / high speed', function () {
+        it('has low complexity / high speed', function () {
             // We'll skip this test most of the time. In this, we used a
             // deterministic method to divy out the cards, and now we have the
             // counter solve the whole thing.
@@ -292,6 +292,10 @@ describe('TheCardCounter', function () {
             // At the end we ask it how many rounds it required to solve.
             //
             // Then a developer tries to change Counter so the score drops.
+            //
+            // When running this test, it's smart to set it to ` and also
+            // set the above test to `:
+            // 'never disagrees with a real set of hands'
             const deck = Deck.buildStandardDeck();
 
             // The following card locations were chosen by a call to shuffle
@@ -320,7 +324,17 @@ describe('TheCardCounter', function () {
 
             counter.possibleCardsFor('envelope');
 
-            assert(counter.complexityScore <= 381, counter.complexityScore);
+            // The current best value for the complexityScore
+            const bestSoFar = 318;
+            assert(
+                counter.complexityScore <= bestSoFar,
+                `Oh no, the complexity score went up! New score ${counter.complexityScore} > ${bestSoFar}`
+            );
+            assert(
+                counter.complexityScore === bestSoFar,
+                `YES! You made the complexity score drop. New score ${counter.complexityScore} < ${bestSoFar}.`
+                + ` Now you should change the bestSoFar value to equal ${counter.complexityScore} in this test`
+            );
         });
     });
 
