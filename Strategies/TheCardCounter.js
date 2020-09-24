@@ -136,11 +136,11 @@ class Counter
     {
         while (this.cardChanges.size > 0 || this.locationChanges.size > 0) {
 
-            for (let card of this.cardChanges) {
-                // This can add to locationChanges
-                this.resolveUnknownCardLocations(card);
-            }
-            this.cardChanges.clear();
+            // The order of the below three sections matters. We save
+            // cardChanges for last because it can have more values. By running
+            // the location-based resolutions first, we have a good chance of
+            // discovering all the cards we'll need to check. If we checked the
+            // cards first, we'd often end up checking the same ones again.
 
             for (let location of this.locationChanges) {
                 // This can add to cardChanges
@@ -154,6 +154,12 @@ class Counter
             //
             // This can add to cardChanges
             this.resolveUnknownEnvelopeCardsByType();
+
+            for (let card of this.cardChanges) {
+                // This can add to locationChanges
+                this.resolveUnknownCardLocations(card);
+            }
+            this.cardChanges.clear();
 
             // Since the above methods could have added to cardChanges or
             // locationChanges, we need to check again. When no more changes
