@@ -1,6 +1,19 @@
 const { suggest, accuse, Card, Hand } = require('../Clue.js');
 const { sample } = require('lodash');
 
+const nonreentrant = function (func) {
+    let working = false;
+    return function (...params) {
+        if (working) {
+            return;
+        }
+        working = true;
+        const result = func.call(this, ...params);
+        working = false;
+        return result;
+    };
+};
+
 /**
  |---------------------
  | TheCardCounter
@@ -73,8 +86,10 @@ class Counter
 {
     constructor(deck, playerCounts)
     {
+        this.resolveUnknowns = nonreentrant(this.resolveUnknowns);
         this.complexityScore = 0;
-        this.hasChanged = false;
+        this.cardChanges = new Set();
+        this.locationChanges = new Set();
 
         this.counts = {
             envelope: 3,
@@ -113,116 +128,112 @@ class Counter
         // our unknowns to see if any of them can become known. But we don't
         // need to do that until someone wants the information. All we need to
         // do is remember that the data needs to be reviewed.
-        this.hasChanged = true;
+        this.cardChanges.add(card);
+        this.locationChanges.add(location);
     }
 
     resolveUnknowns()
     {
-        if (!this.hasChanged) {
-            return;
-        }
-        this.hasChanged = false;
-        let changesWereMade = true;
-        while (changesWereMade) {
-            // We check all the cards that have unknown locations, to see if
-            // our new information reduced the unknowns so that they must add
-            // up a particular way.
+        while (this.cardChanges.size > 0 || this.locationChanges.size > 0) {
+
+            for (let card of this.cardChanges) {
+                // This can add to locationChanges
+                this.resolveUnknownCardLocations(card);
+            }
+            this.cardChanges.clear();
+
+            for (let location of this.locationChanges) {
+                // This can add to cardChanges
+                this.resolveUnknownLocationCards(location);
+            }
+            this.locationChanges.clear();
+
+            // Oh, don't forget to check the envelope. Unlike regular hands, it
+            // only ever has one of each card type at a time. We can use that
+            // fact to deduce cards within a type.
             //
-            // And we check all the locations that have unknown cards, to see
-            // if our new information reduced the unknowns to that they must
-            // add up a particular way.
-            //
-            // And finally we check whether the envelope only has one of any
-            // particular card type possible. Since it can only have one of a
-            // type, we know that's the answer.
-            //
-            // If any method makes a change, we loop around again, because that
-            // change may create a cascade of updates.
-            //
-            // This is in no particular order, but if one of the early ones
-            // makes a change, we short circuit and loop around again. This
-            // reduces the size of each pass and theoretically reduces the
-            // amount of work being done.
-            changesWereMade = this.resolveUnknownCardLocations()
-                || this.resolveUnknownLocationCards()
-                || this.resolveUnknownEnvelopeCardsByType();
+            // This can add to cardChanges
+            this.resolveUnknownEnvelopeCardsByType();
+
+            // Since the above methods could have added to cardChanges or
+            // locationChanges, we need to check again. When no more changes
+            // are needed, no cards and locations will be added, and we can
+            // stop looping.
         }
     }
 
-    resolveUnknownCardLocations()
+    resolveUnknownCardLocations(card)
     {
-        let changesWereMade = false;
-        this.deck.forEach(card => {
-            const yes = [];
-            const no = [];
-            const unknown = [];
-            this.allLocationsFor(card)
-                .forEach(location => {
-                    this.complexityScore++;
-                    const value = this.map.get([card, location]);
-                    if (value === true) {
-                        yes.push(location)
-                    } else if (value === false) {
-                        no.push(location);
-                    } else if (value === UNKNOWN) {
-                        unknown.push(location);
-                    }
-                });
-            if (unknown.length > 0) {
-                if (yes.length === 1) {
-                    unknown.forEach(
-                        location => this.map.set([card, location], false)
-                    );
-                    changesWereMade = true;
-                } else if (unknown.length === 1) {
-                    this.map.set([card, unknown[0]], true);
-                    changesWereMade = true;
+        const yes = [];
+        const no = [];
+        const unknown = [];
+        this.allLocationsFor(card)
+            .forEach(location => {
+                this.complexityScore++;
+                const value = this.map.get([card, location]);
+                if (value === true) {
+                    yes.push(location)
+                } else if (value === false) {
+                    no.push(location);
+                } else if (value === UNKNOWN) {
+                    unknown.push(location);
                 }
+            });
+        if (unknown.length > 0) {
+            if (yes.length === 1) {
+                unknown.forEach(
+                    location => {
+                        this.map.set([card, location], false);
+                        this.locationChanges.add(location);
+                    }
+                );
+            } else if (unknown.length === 1) {
+                const location = unknown[0];
+                this.map.set([card, location], true);
+                this.locationChanges.add(location);
             }
-        });
-        return changesWereMade;
+        }
     }
 
-    resolveUnknownLocationCards()
+    resolveUnknownLocationCards(location)
     {
-        let changesWereMade = false;
-        Object.keys(this.counts).forEach(location => {
-            const count = this.counts[location];
-            const yes = [];
-            const no = [];
-            const unknown = [];
-            this.allCardsFor(location)
-                .forEach(card => {
-                    this.complexityScore++;
-                    const value = this.map.get([card, location]);
-                    if (value === true) {
-                        yes.push(card)
-                    } else if (value === false) {
-                        no.push(card);
-                    } else if (value === UNKNOWN) {
-                        unknown.push(card);
-                    }
-                });
-            if (unknown.length > 0) {
-                if (yes.length === count) {
-                    unknown.forEach(
-                        card => this.map.set([card, location], false)
-                    );
-                    changesWereMade = true;
-                } else if (unknown.length + yes.length === count) {
-                    unknown.forEach(
-                        card => this.map.set([card, location], true)
-                    );
-                    changesWereMade = true;
+        const count = this.counts[location];
+        const yes = [];
+        const no = [];
+        const unknown = [];
+        this.allCardsFor(location)
+            .forEach(card => {
+                this.complexityScore++;
+                const value = this.map.get([card, location]);
+                if (value === true) {
+                    yes.push(card)
+                } else if (value === false) {
+                    no.push(card);
+                } else if (value === UNKNOWN) {
+                    unknown.push(card);
                 }
+            });
+        if (unknown.length > 0) {
+            if (yes.length === count) {
+                unknown.forEach(
+                    card => {
+                        this.map.set([card, location], false);
+                        this.cardChanges.add(card);
+                    }
+                );
+            } else if (unknown.length + yes.length === count) {
+                unknown.forEach(
+                    card => {
+                        this.map.set([card, location], true);
+                        this.cardChanges.add(card);
+                    }
+                );
             }
-        });
-        return changesWereMade;
+        }
     }
 
     resolveUnknownEnvelopeCardsByType()
     {
-        let changesWereMade = false;
         const cards = this.possibleCardsFor('envelope');
         const typeGroups = [
             cards.filter(card => card.type === Card.SUSPECT),
@@ -235,11 +246,10 @@ class Counter
                 const card = typeGroup[0];
                 if (this.map.get([card, 'envelope']) === UNKNOWN) {
                     this.map.set([card, 'envelope'], true);
-                    changesWereMade = true;
+                    this.cardChanges.add(card);
                 }
             }
         });
-        return changesWereMade;
     }
 
     possibleLocationsFor(card)

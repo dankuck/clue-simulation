@@ -403,7 +403,7 @@ describe('TheCardCounter', function () {
             counter.possibleCardsFor('envelope');
 
             // The current best value for the complexityScore
-            const bestSoFar = 318;
+            const bestSoFar = 213;
             assert(
                 counter.complexityScore <= bestSoFar,
                 `Oh no, the complexity score went up! New score ${counter.complexityScore} > ${bestSoFar}`
