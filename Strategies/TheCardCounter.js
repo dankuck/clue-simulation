@@ -23,10 +23,8 @@ class TheCardCounter
         this.deck = deck;
         this.game_summary = game_summary;
         this.counter = new Counter(deck, game_summary.hands.map(hand => hand.length));
-        this.counter.markCardLocations(
-            this.hand.map(
-                card => [card, game_summary.position.toString(), true]
-            )
+        this.hand.forEach(
+            card => this.counter.markCardLocation(card, game_summary.position.toString(), true)
         );
     }
 
@@ -63,11 +61,9 @@ class TheCardCounter
 
     seeSuggestionNotRefuted({suggestion, player})
     {
-        this.counter.markCardLocations([
-            [suggestion.suspect, player.toString(), false],
-            [suggestion.weapon, player.toString(), false],
-            [suggestion.room, player.toString(), false],
-        ]);
+        this.counter.markCardLocation(suggestion.suspect, player.toString(), false);
+        this.counter.markCardLocation(suggestion.weapon, player.toString(), false);
+        this.counter.markCardLocation(suggestion.room, player.toString(), false);
     }
 }
 
@@ -77,6 +73,9 @@ class Counter
 {
     constructor(deck, playerCounts)
     {
+        this.complexityScore = 0;
+        this.hasChanged = false;
+
         this.counts = {
             envelope: 3,
             ...playerCounts,
@@ -94,36 +93,35 @@ class Counter
 
     cardIsInLocation(card, location)
     {
+        this.resolveUnknowns();
         return this.map.get([card, location]) === true;
     }
 
     cardIsNotInLocation(card, location)
     {
+        this.resolveUnknowns();
         return this.map.get([card, location]) === false;
     }
 
-    markCardLocation(...params)
+    markCardLocation(card, location, correct)
     {
-        this.markCardLocations([params]);
-    }
-
-    markCardLocations(many)
-    {
-        many.forEach(([card, location, correct]) => {
-            if (![true, false].includes(correct)) {
-                throw new TypeError('Bad value sent to markCardLocation');
-            }
-        });
-        many.forEach(([card, location, correct]) => {
-            this.map.set([card, location], correct);
-        });
-        // The key to this tool is that every time we make any change, we check
-        // all of our unknowns to see if any of them can become known.
-        this.resolveUnknowns();
+        if (![true, false].includes(correct)) {
+            throw new TypeError('Bad value sent to markCardLocation');
+        }
+        this.map.set([card, location], correct);
+        // The key to this tool is that after changes are made, we check all of
+        // our unknowns to see if any of them can become known. But we don't
+        // need to do that until someone wants the information. All we need to
+        // do is remember that the data needs to be reviewed.
+        this.hasChanged = true;
     }
 
     resolveUnknowns()
     {
+        if (!this.hasChanged) {
+            return;
+        }
+        this.hasChanged = false;
         let changesWereMade = true;
         while (changesWereMade) {
             // We check all the cards that have unknown locations, to see if
@@ -160,6 +158,7 @@ class Counter
             const unknown = [];
             this.allLocationsFor(card)
                 .forEach(location => {
+                    this.complexityScore++;
                     const value = this.map.get([card, location]);
                     if (value === true) {
                         yes.push(location)
@@ -194,6 +193,7 @@ class Counter
             const unknown = [];
             this.allCardsFor(location)
                 .forEach(card => {
+                    this.complexityScore++;
                     const value = this.map.get([card, location]);
                     if (value === true) {
                         yes.push(card)
@@ -230,7 +230,7 @@ class Counter
             cards.filter(card => card.type === Card.ROOM),
         ];
         typeGroups.forEach(typeGroup => {
-
+            this.complexityScore++;
             if (typeGroup.length === 1) {
                 const card = typeGroup[0];
                 if (this.map.get([card, 'envelope']) === UNKNOWN) {
@@ -280,6 +280,7 @@ class Counter
 
     allTrue()
     {
+        this.resolveUnknowns();
         return [...this.map.entries()]
             .filter(([key, value]) => value === true)
             .map(([key, value]) => key);
@@ -287,6 +288,7 @@ class Counter
 
     mapKeysIncluding(keyPart, values)
     {
+        this.resolveUnknowns();
         return [...this.map.entries()]
             .filter(([key, value]) => key.includes(keyPart) && values.includes(value))
             .map(([key, value]) => key);

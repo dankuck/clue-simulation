@@ -20,7 +20,7 @@ const { shuffle, sample } = require('lodash');
 
 const { Counter, ArrayMap } = TheSuggestionWatcherCardCounter;
 
-describe.only('TheSuggestionWatcherCardCounter', function () {
+describe('TheSuggestionWatcherCardCounter', function () {
 
     testStrategy(TheSuggestionWatcherCardCounter);
 

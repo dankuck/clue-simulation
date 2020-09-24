@@ -20,7 +20,7 @@ const { shuffle, sample } = require('lodash');
 
 const { Counter, ArrayMap } = TheCardCounter;
 
-describe.only('TheCardCounter', function () {
+describe('TheCardCounter', function () {
 
     testStrategy(TheCardCounter);
 
@@ -139,12 +139,10 @@ describe.only('TheCardCounter', function () {
             const deck = Deck.buildStandardDeck();
             const counter = new Counter(deck, [5, 5, 4, 4]);
             const card = deck.get(0);
-            counter.markCardLocations([
-                [card, '0', false],
-                [card, '1', false],
-                [card, '2', false],
-                [card, '3', false],
-            ]);
+            counter.markCardLocation(card, '0', false);
+            counter.markCardLocation(card, '1', false);
+            counter.markCardLocation(card, '2', false);
+            counter.markCardLocation(card, '3', false);
             const cards = counter.trueCardsFor('envelope');
             equal(1, cards.length);
             equal(card, cards[0]);
@@ -284,6 +282,45 @@ describe.only('TheCardCounter', function () {
             // do all of the rest with yes, so we can count the results
             shuffle(cardLocations).forEach(cardLocation => learn(cardLocation, 1));
             equal(21, lastKnown.length);
+        });
+
+        it.skip('has low complexity / high speed', function () {
+            // We'll skip this test most of the time. In this, we used a
+            // deterministic method to divy out the cards, and now we have the
+            // counter solve the whole thing.
+            //
+            // At the end we ask it how many rounds it required to solve.
+            //
+            // Then a developer tries to change Counter so the score drops.
+            const deck = Deck.buildStandardDeck();
+
+            // The following card locations were chosen by a call to shuffle
+            // and now they are set in stone, so all versions of Counter have
+            // to deal with the same data.
+            const facts = [
+                [ 7, 2 ],           [ 3, 3 ],
+                [ 15, 0 ],          [ 11, 0 ],
+                [ 19, 0 ],          [ 5, 1 ],
+                [ 1, 2 ],           [ 14, 1 ],
+                [ 20, 3 ],          [ 6, 0 ],
+                [ 17, 0 ],          [ 12, 3 ],
+                [ 8, 'envelope' ],  [ 13, 3 ],
+                [ 18, 'envelope' ], [ 10, 1 ],
+                [ 4, 'envelope' ],  [ 0, 2 ],
+                [ 2, 1 ],           [ 16, 2 ],
+                [ 9, 1 ],
+            ].map(([i, location]) => [deck.get(i), location.toString()]);
+
+            const playerCounts = [5, 5, 4, 4];
+            const counter = new Counter(deck, playerCounts);
+
+            facts.forEach(
+                ([card, location]) => counter.markCardLocation(card, location, true)
+            );
+
+            counter.possibleCardsFor('envelope');
+
+            assert(counter.complexityScore <= 381, counter.complexityScore);
         });
     });
 
