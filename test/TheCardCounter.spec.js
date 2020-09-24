@@ -313,8 +313,8 @@ describe('TheCardCounter', function () {
                 [ 5  , 1 , true  , 5  ],
                 [ 1  , 3 , false , 5  ], // several rows that only tell false
                 [ 14 , 2 , false , 5  ],
-                [ 20 , 4 , false , 5  ],
-                [ 20 , 4 , false , 5  ],
+                [ 20 , 0 , false , 5  ],
+                [ 20 , 0 , false , 5  ],
                 [ 6  , 0 , true  , 6  ],
                 [ 17 , 0 , true  , 7  ],
                 [ 12 , 3 , true  , 8  ],
@@ -327,9 +327,9 @@ describe('TheCardCounter', function () {
                 [ 2  , 1 , true  , 12 ],
                 [ 16 , 2 , true  , 13 ],
                 [ 9  , 1 , true  , 14 ],
-                [ 11 , 0 , true  , 16 ], // something was deduced
-                [ 1  , 2 , true  , 18 ], // another deduction
-                [ 14 , 1 , true  , 19 ],
+                [ 11 , 0 , true  , 15 ],
+                [ 1  , 2 , true  , 17 ], // something was deduced
+                [ 14 , 1 , true  , 18 ],
                 [ 20 , 3 , true  , 21 ], // whole game solved
             ].map(
                 ([i, location, correct, expectedKnown]) =>
@@ -352,6 +352,11 @@ describe('TheCardCounter', function () {
         });
 
         it('has low complexity / high speed', function () {
+            // This is the value we got last time we ran this test. If you make
+            // this go up by more than a few, you have discovered a worse
+            // algorithm.
+            const bestSoFar = 329;
+
             // In this test, we used a deterministic method to divy out the
             // cards, and now we have the counter solve the whole thing.
             //
@@ -370,7 +375,7 @@ describe('TheCardCounter', function () {
             // and now they are set in stone, so all versions of Counter have
             // to deal with the same data.
             const facts = [
-                [ 20 , 4 , false ],
+                [ 20 , 0 , false ],
                 [ 11 , 1 , false ],
                 [ 20 , 3 , true  ],
                 [ 4  , 0 , false ],
@@ -388,7 +393,7 @@ describe('TheCardCounter', function () {
                 [ 17 , 0 , true  ],
                 [ 14 , 2 , false ],
                 [ 19 , 1 , false ],
-                [ 20 , 4 , false ],
+                [ 20 , 0 , false ],
                 [ 15 , 0 , true  ],
                 [ 7  , 2 , true  ],
                 [ 12 , 3 , true  ],
@@ -408,10 +413,6 @@ describe('TheCardCounter', function () {
 
             counter.possibleCardsFor('envelope');
 
-            // This is the value we got last time we ran this test. If you make
-            // this go up by more than a few, you have discovered a worse
-            // algorithm.
-            const bestSoFar = 331;
             assert(
                 counter.complexityScore <= bestSoFar,
                 `Oh no, the complexity score went up! New score ${counter.complexityScore} > ${bestSoFar}`

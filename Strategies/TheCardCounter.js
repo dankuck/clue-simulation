@@ -86,19 +86,30 @@ class Counter
 {
     constructor(deck, playerCounts)
     {
-        this.resolveUnknowns = nonreentrant(this.resolveUnknowns);
+        // This counts how many cards and locations we have to loop through
+        // when we resolve the effects of changes that are made.
         this.complexityScore = 0;
+
+        // These are sets of cards and locations that are changed. When we seek
+        // to resolve those changes, we can just look at these cards and
+        // locations, instead of looping through all the cards and locations.
         this.cardChanges = new Set();
         this.locationChanges = new Set();
 
+        // This is how many cards are in each place, the envelope and the
+        // player ids.
         this.counts = {
             envelope: 3,
             ...playerCounts,
         };
 
-        this.map = new ArrayMap();
+        // A fast way to remember what cards we have
         this.deck = deck;
 
+        // The data!
+        this.map = new ArrayMap();
+
+        // The data starts out with all UNKNOWNs
         Object.keys(this.counts).forEach(location => {
             deck.forEach(card => {
                 this.map.set([card, location], UNKNOWN);
@@ -123,11 +134,13 @@ class Counter
         if (![true, false].includes(correct)) {
             throw new TypeError('Bad value sent to markCardLocation');
         }
+
         this.map.set([card, location], correct);
+
         // The key to this tool is that after changes are made, we check all of
         // our unknowns to see if any of them can become known. But we don't
         // need to do that until someone wants the information. All we need to
-        // do is remember that the data needs to be reviewed.
+        // do is remember which data needs to be reviewed.
         this.cardChanges.add(card);
         this.locationChanges.add(location);
     }
@@ -140,7 +153,8 @@ class Counter
             // cardChanges for last because it can have more values. By running
             // the location-based resolutions first, we have a good chance of
             // discovering all the cards we'll need to check. If we checked the
-            // cards first, we'd often end up checking the same ones again.
+            // cards first, the locations would often create a long list of
+            // cards to check again.
 
             for (let location of this.locationChanges) {
                 // This can add to cardChanges
@@ -148,9 +162,8 @@ class Counter
             }
             this.locationChanges.clear();
 
-            // Oh, don't forget to check the envelope. Unlike regular hands, it
-            // only ever has one of each card type at a time. We can use that
-            // fact to deduce cards within a type.
+            // Unlike regular hands, the envelope only ever has one of each
+            // card type at a time. We'll use that fact to our advantage.
             //
             // This can add to cardChanges
             this.resolveUnknownEnvelopeCardsByType();
@@ -163,8 +176,8 @@ class Counter
 
             // Since the above methods could have added to cardChanges or
             // locationChanges, we need to check again. When no more changes
-            // are needed, no cards and locations will be added, and we can
-            // stop looping.
+            // are needed, no cards or locations will be added, and we can stop
+            // looping.
         }
     }
 
@@ -173,7 +186,7 @@ class Counter
         const yes = [];
         const no = [];
         const unknown = [];
-        this.allLocationsFor(card)
+        Object.keys(this.counts)
             .forEach(location => {
                 this.complexityScore++;
                 const value = this.map.get([card, location]);
@@ -207,7 +220,7 @@ class Counter
         const yes = [];
         const no = [];
         const unknown = [];
-        this.allCardsFor(location)
+        this.deck
             .forEach(card => {
                 this.complexityScore++;
                 const value = this.map.get([card, location]);
@@ -240,17 +253,23 @@ class Counter
 
     resolveUnknownEnvelopeCardsByType()
     {
-        const cards = this.possibleCardsFor('envelope');
+        const cards = this.deck;
+        const possibleOfType = type => {
+            return this.deck
+                .filter(card => card.type === Card.SUSPECT)
+                .map(card => [card, this.map.get([card, 'envelope'])])
+                .filter(([card, correct]) => correct === true || correct === UNKNOWN);
+        };
         const typeGroups = [
-            cards.filter(card => card.type === Card.SUSPECT),
-            cards.filter(card => card.type === Card.WEAPON),
-            cards.filter(card => card.type === Card.ROOM),
+            possibleOfType(Card.SUSPECT),
+            possibleOfType(Card.WEAPON),
+            possibleOfType(Card.ROOM),
         ];
         typeGroups.forEach(typeGroup => {
             this.complexityScore++;
             if (typeGroup.length === 1) {
-                const card = typeGroup[0];
-                if (this.map.get([card, 'envelope']) === UNKNOWN) {
+                const [card, correct] = typeGroup[0];
+                if (correct === UNKNOWN) {
                     this.map.set([card, 'envelope'], true);
                     this.cardChanges.add(card);
                 }
@@ -270,12 +289,6 @@ class Counter
             .map(([card, location]) => location);
     }
 
-    allLocationsFor(card)
-    {
-        return this.mapKeysIncluding(card, [true, UNKNOWN, false])
-            .map(([card, location]) => location);
-    }
-
     possibleCardsFor(location)
     {
         return this.mapKeysIncluding(location, [true, UNKNOWN])
@@ -285,12 +298,6 @@ class Counter
     trueCardsFor(location)
     {
         return this.mapKeysIncluding(location, [true])
-            .map(([card, location]) => card);
-    }
-
-    allCardsFor(location)
-    {
-        return this.mapKeysIncluding(location, [true, UNKNOWN, false])
             .map(([card, location]) => card);
     }
 
